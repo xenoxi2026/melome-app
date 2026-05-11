@@ -1,0 +1,31 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+# Serve old website at root
+[[redirects]]
+  from = "/"
+  to = "/old-website/index.html"
+  status = 200
+
+# Serve old website assets (CSS, JS, images)
+[[redirects]]
+  from = "/css/*"
+  to = "/old-website/css/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/js/*"
+  to = "/old-website/js/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/images/*"
+  to = "/old-website/images/:splat"
+  status = 200
+
+# Portal and all other React routes go to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

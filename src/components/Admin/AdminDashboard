@@ -1,0 +1,331 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { notifyPaymentConfirmed, notifyShipmentDispatched, notifyDelivered, getClientDetails } from '../services/notificationService';
+
+const AdminDashboard = () => {
+  const [quotes, setQuotes] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState('quotes');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    // Load data from localStorage
+    const savedQuotes = localStorage.getItem('melome_quotes');
+    const savedOrders = localStorage.getItem('melome_orders');
+    
+    if (savedQuotes) setQuotes(JSON.parse(savedQuotes));
+    if (savedOrders) setOrders(JSON.parse(savedOrders));
+  }, []);
+
+  // Get client details from userId or email
+  const getClientFromOrder = (order) => {
+    // Try to find client from localStorage users
+    const users = JSON.parse(localStorage.getItem('melome_users') || '[]');
+    let client = users.find(u => u.name === order.clientName);
+    
+    if (!client) {
+      // Default client based on name
+      client = {
+        id: order.clientId || 1,
+        name: order.clientName,
+        email: 'client@melome.com',
+        phone: '+27781234567'
+      };
+    }
+    return client;
+  };
+
+  const acceptQuote = async (quoteId) => {
+    const updatedQuotes = quotes.map(q => 
+      q.id === quoteId ? { ...q, status: 'accepted' } : q
+    );
+    setQuotes(updatedQuotes);
+    localStorage.setItem('melome_quotes', JSON.stringify(updatedQuotes));
+    
+    // Create order from quote
+    const quote = quotes.find(q => q.id === quoteId);
+    if (quote) {
+      const newOrder = {
+        id: 'ORD-' + Date.now(),
+        quoteId: quote.id,
+        clientId: quote.clientId,
+        clientName: quote.clientName,
+        clientEmail: quote.clientEmail,
+        amount: quote.estimatedPrice,
+        status: 'pending',
+        date: new Date().toISOString(),
+        tracking: 'MEL' + Math.floor(Math.random() * 1000000)
+      };
+      const updatedOrders = [...orders, newOrder];
+      setOrders(updatedOrders);
+      localStorage.setItem('melome_orders', JSON.stringify(updatedOrders));
+      
+      // Send notification to client
+      if (notificationsEnabled) {
+        const client = {
+          name: quote.clientName,
+          email: quote.clientEmail || 'client@melome.com',
+          phone: '+27781234567'
+        };
+        await notifyPaymentConfirmed(client, newOrder);
+        alert('Quote accepted! Order created and client notified.');
+      } else {
+        alert('Quote accepted! Order created.');
+      }
+    }
+  };
+
+  const declineQuote = (quoteId) => {
+    if (window.confirm('Decline this quote?')) {
+      const updatedQuotes = quotes.map(q => 
+        q.id === quoteId ? { ...q, status: 'declined' } : q
+      );
+      setQuotes(updatedQuotes);
+      localStorage.setItem('melome_quotes', JSON.stringify(updatedQuotes));
+      alert('Quote declined');
+    }
+  };
+
+  const updateStatus = async (orderId, newStatus) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    const updatedOrders = orders.map(o => 
+      o.id === orderId ? { ...o, status: newStatus, updatedAt: new Date().toISOString() } : o
+    );
+    setOrders(updatedOrders);
+    localStorage.setItem('melome_orders', JSON.stringify(updatedOrders));
+    
+    // Send notifications based on status change
+    if (notificationsEnabled) {
+      const client = {
+        name: order.clientName,
+        email: order.clientEmail || 'client@melome.com',
+        phone: '+27781234567'
+      };
+      
+      if (newStatus === 'assigned' || newStatus === 'in-transit') {
+        await notifyShipmentDispatched(client, order, '2-3 business days');
+        alert(`Status updated to ${newStatus} - Client notified via email/SMS`);
+      } else if (newStatus === 'delivered') {
+        await notifyDelivered(client, order);
+        alert(`Status updated to Delivered - Client notified via email/SMS`);
+      } else {
+        alert(`Status updated to ${newStatus}`);
+      }
+    } else {
+      alert(`Status updated to ${newStatus}`);
+    }
+  };
+
+  const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'pending_payment');
+  const activeOrders = orders.filter(o => o.status !== 'delivered');
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.amount || 0), 0);
+
+  const styles = {
+    container: { minHeight: '100vh', background: '#0f172a' },
+    header: { background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px' },
+    headerContent: { maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    title: { fontSize: '24px', fontWeight: 'bold', color: 'white' },
+    logout: { color: '#94a3b8', textDecoration: 'none' },
+    main: { maxWidth: '1280px', margin: '0 auto', padding: '24px' },
+    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' },
+    statCard: { background: '#1e293b', padding: '20px', borderRadius: '8px' },
+    statLabel: { color: '#94a3b8', fontSize: '14px' },
+    statValue: { fontSize: '32px', fontWeight: 'bold', marginTop: '8px' },
+    tabs: { display: 'flex', gap: '8px', borderBottom: '1px solid #334155', marginBottom: '24px' },
+    tabButton: { padding: '8px 16px', background: 'none', border: 'none', fontWeight: 'bold', cursor: 'pointer' },
+    contentCard: { background: '#1e293b', borderRadius: '8px' },
+    quoteItem: { padding: '20px', borderBottom: '1px solid #334155' },
+    quoteHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px' },
+    quoteId: { color: '#94a3b8', fontSize: '12px' },
+    clientName: { color: 'white', fontWeight: 'bold', marginTop: '4px' },
+    price: { color: '#10b981', fontSize: '20px', fontWeight: 'bold' },
+    buttonGroup: { display: 'flex', gap: '12px', marginTop: '12px' },
+    acceptBtn: { background: '#10b981', color: 'black', padding: '8px 20px', borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer' },
+    declineBtn: { background: 'rgba(239,68,68,0.2)', color: '#ef4444', padding: '8px 20px', borderRadius: '6px', fontWeight: 'bold', border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer' },
+    orderItem: { padding: '20px', borderBottom: '1px solid #334155' },
+    orderHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px' },
+    orderId: { color: '#10b981', fontSize: '12px' },
+    select: { background: '#0f172a', border: '1px solid #334155', padding: '8px', borderRadius: '6px', color: 'white', width: '200px' },
+    table: { width: '100%', borderCollapse: 'collapse' },
+    th: { padding: '12px', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid #334155' },
+    td: { padding: '12px', borderBottom: '1px solid #334155' },
+    emptyState: { padding: '60px', textAlign: 'center', color: '#64748b' },
+    statusBadge: { padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: 'white' },
+    notificationToggle: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }
+  };
+
+  const getStatusColor = (status) => {
+    if (status === 'delivered') return { background: '#10b981' };
+    if (status === 'in-transit') return { background: '#3b82f6' };
+    if (status === 'assigned') return { background: '#8b5cf6' };
+    return { background: '#f59e0b' };
+  };
+
+  return (
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <div style={styles.headerContent}>
+          <h1 style={styles.title}>Admin Dashboard</h1>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <div style={styles.notificationToggle}>
+              <label style={{ color: '#94a3b8', fontSize: '14px' }}>🔔 Notifications</label>
+              <button 
+                onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+                style={{ 
+                  background: notificationsEnabled ? '#10b981' : '#ef4444', 
+                  color: 'white', 
+                  border: 'none', 
+                  padding: '4px 12px', 
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                {notificationsEnabled ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            <Link to="/portal/logout" style={styles.logout}>Logout</Link>
+          </div>
+        </div>
+      </header>
+
+      <main style={styles.main}>
+        {/* Stats */}
+        <div style={styles.statsGrid}>
+          <div style={styles.statCard}>
+            <p style={styles.statLabel}>Pending Quotes</p>
+            <p style={{ ...styles.statValue, color: '#f59e0b' }}>{pendingQuotes.length}</p>
+          </div>
+          <div style={styles.statCard}>
+            <p style={styles.statLabel}>Active Orders</p>
+            <p style={{ ...styles.statValue, color: '#3b82f6' }}>{activeOrders.length}</p>
+          </div>
+          <div style={styles.statCard}>
+            <p style={styles.statLabel}>Total Revenue</p>
+            <p style={{ ...styles.statValue, color: '#10b981' }}>R{totalRevenue.toLocaleString()}</p>
+          </div>
+          <div style={styles.statCard}>
+            <p style={styles.statLabel}>Total Orders</p>
+            <p style={{ ...styles.statValue, color: 'white' }}>{orders.length}</p>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={styles.tabs}>
+          <button onClick={() => setActiveTab('quotes')} style={{ ...styles.tabButton, color: activeTab === 'quotes' ? '#10b981' : '#94a3b8', borderBottom: activeTab === 'quotes' ? '2px solid #10b981' : 'none' }}>
+            Quotes ({pendingQuotes.length})
+          </button>
+          <button onClick={() => setActiveTab('orders')} style={{ ...styles.tabButton, color: activeTab === 'orders' ? '#10b981' : '#94a3b8', borderBottom: activeTab === 'orders' ? '2px solid #10b981' : 'none' }}>
+            Active Orders
+          </button>
+          <button onClick={() => setActiveTab('all-orders')} style={{ ...styles.tabButton, color: activeTab === 'all-orders' ? '#10b981' : '#94a3b8', borderBottom: activeTab === 'all-orders' ? '2px solid #10b981' : 'none' }}>
+            All Orders
+          </button>
+        </div>
+
+        {/* Quotes Tab */}
+        {activeTab === 'quotes' && (
+          <div style={styles.contentCard}>
+            {pendingQuotes.length === 0 ? (
+              <div style={styles.emptyState}>No pending quotes. Submit a quote from the website first.</div>
+            ) : (
+              pendingQuotes.map(quote => (
+                <div key={quote.id} style={styles.quoteItem}>
+                  <div style={styles.quoteHeader}>
+                    <div>
+                      <p style={styles.quoteId}>{quote.id}</p>
+                      <p style={styles.clientName}>{quote.clientName}</p>
+                    </div>
+                    <p style={styles.price}>R{quote.estimatedPrice?.toLocaleString()}</p>
+                  </div>
+                  <div style={styles.buttonGroup}>
+                    <button onClick={() => acceptQuote(quote.id)} style={styles.acceptBtn}>Accept & Notify</button>
+                    <button onClick={() => declineQuote(quote.id)} style={styles.declineBtn}>Decline</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Active Orders Tab */}
+        {activeTab === 'orders' && (
+          <div style={styles.contentCard}>
+            {activeOrders.length === 0 ? (
+              <div style={styles.emptyState}>No active orders</div>
+            ) : (
+              activeOrders.map(order => (
+                <div key={order.id} style={styles.orderItem}>
+                  <div style={styles.orderHeader}>
+                    <div>
+                      <p style={styles.orderId}>{order.id}</p>
+                      <p style={styles.clientName}>{order.clientName}</p>
+                      <p style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Tracking: {order.tracking}</p>
+                    </div>
+                    <p style={{ color: 'white', fontWeight: 'bold' }}>R{order.amount?.toLocaleString()}</p>
+                  </div>
+                  <select 
+                    onChange={(e) => updateStatus(order.id, e.target.value)} 
+                    value={order.status} 
+                    style={styles.select}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="assigned">Assigned to Driver (Send Alert)</option>
+                    <option value="picked-up">Picked Up</option>
+                    <option value="in-transit">In Transit (Send Alert)</option>
+                    <option value="delivered">Delivered (Send Alert)</option>
+                  </select>
+                  {notificationsEnabled && (
+                    <p style={{ color: '#10b981', fontSize: '11px', marginTop: '8px' }}>✓ Customer will be notified on status change</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* All Orders Tab */}
+        {activeTab === 'all-orders' && (
+          <div style={styles.contentCard}>
+            {orders.length === 0 ? (
+              <div style={styles.emptyState}>No orders yet</div>
+            ) : (
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Order ID</th>
+                    <th style={styles.th}>Client</th>
+                    <th style={styles.th}>Amount</th>
+                    <th style={styles.th}>Tracking</th>
+                    <th style={styles.th}>Status</th>
+                    <th style={styles.th}>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map(order => (
+                    <tr key={order.id}>
+                      <td style={styles.td}>{order.id}</td>
+                      <td style={styles.td}>{order.clientName}</td>
+                      <td style={styles.td}>R{order.amount?.toLocaleString()}</td>
+                      <td style={styles.td}>{order.tracking}</td>
+                      <td style={styles.td}>
+                        <span style={{ ...styles.statusBadge, ...getStatusColor(order.status) }}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td style={styles.td}>{new Date(order.date).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default AdminDashboard;
