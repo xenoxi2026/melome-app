@@ -15,6 +15,7 @@ import Payment from './components/Payment';
 import Notifications from './components/Portal/Notifications';
 import WeChatButton from './components/WeChatButton';
 import Contact from './components/Contact';
+import Tracking from './components/Tracking';
 
 // Temporary placeholder components until Driver components are created
 const DriverLogin = () => {
@@ -128,6 +129,7 @@ function LandingPage() {
           <a href="#gallery" className="text-slate-400 hover:text-emerald-400 transition">Gallery</a>
           <a href="#team" className="text-slate-400 hover:text-emerald-400 transition">Leadership</a>
           <a href="#contact" className="text-slate-400 hover:text-emerald-400 transition">Contact</a>
+          <Link to="/tracking" className="text-slate-400 hover:text-emerald-400 transition">Track</Link>
           <Link to="/china-corridor" className="text-red-400 hover:text-red-300 transition font-bold flex items-center gap-1">
             <span>🇨🇳</span> 中 EN
           </Link>
@@ -391,6 +393,9 @@ function App() {
           {/* Driver Portal - Using placeholder components */}
           <Route path="/driver/login" element={<DriverLogin />} />
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
+          
+          {/* Tracking Page */}
+          <Route path="/tracking" element={<Tracking />} />
           
           {/* Payment Pages */}
           <Route path="/payment" element={<Payment amount={500} itemName="Melome Logistics Service" itemDescription="Professional logistics and delivery service across SADC" />} />

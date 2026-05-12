@@ -6,14 +6,6 @@ import { FaMapMarkerAlt, FaBox, FaClipboardList, FaCalculator } from 'react-icon
 import PaymentModal from '../Payment/PaymentModal';
 import { notifyQuoteReceived } from '../services/notificationService';
 
-// Inside handleSubmit, after saving quote, add:
-const client = { 
-  email: user.email, 
-  phone: user.phone, 
-  name: user.name 
-};
-await notifyQuoteReceived(client, quote);
-
 export const QuoteForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -61,6 +53,7 @@ export const QuoteForm = () => {
       clientId: user.id,
       clientName: user.name,
       clientEmail: user.email,
+      clientPhone: user.phone,
       pickup: formData.pickup,
       delivery: formData.delivery,
       package: formData.package,
@@ -74,6 +67,14 @@ export const QuoteForm = () => {
     const quotes = JSON.parse(localStorage.getItem('melome_quotes') || '[]');
     quotes.push(quote);
     localStorage.setItem('melome_quotes', JSON.stringify(quotes));
+    
+    // Send notifications
+    const client = {
+      name: user.name,
+      email: user.email,
+      phone: user.phone
+    };
+    await notifyQuoteReceived(client, quote);
     
     setCurrentQuote(quote);
     setShowPayment(true);
@@ -228,7 +229,7 @@ export const QuoteForm = () => {
                 checked={formData.isUrgent}
                 onChange={(e) => setFormData({ ...formData, isUrgent: e.target.checked })}
               />
-              <span className="text-white">ðŸš€ Urgent Delivery (Additional R500 fee)</span>
+              <span className="text-white">🚀 Urgent Delivery (Additional R500 fee)</span>
             </label>
             
             {/* Estimate Button */}
@@ -255,7 +256,7 @@ export const QuoteForm = () => {
               disabled={loading}
               className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition disabled:opacity-50"
             >
-              {loading ? 'Creating Quote...' : 'Proceed to Payment â†’'}
+              {loading ? 'Creating Quote...' : 'Proceed to Payment →'}
             </button>
           </form>
         </div>

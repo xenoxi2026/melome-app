@@ -1,27 +1,166 @@
 import React, { useState } from 'react';
 import { CreditCard, Lock, Shield, CheckCircle } from 'lucide-react';
 
-const Payment = ({ amount, itemName, itemDescription }) => {
+const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => {
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
 
-  // PayFast Configuration
-  // FOR TESTING (Sandbox Mode) - Get your actual credentials from payfast.co.za
+  // PayFast Configuration - YOUR LIVE CREDENTIALS
   const PAYFAST_CONFIG = {
-    // Sandbox (Testing) - Use these for now
-    merchant_id: '10000100',  // Sandbox test merchant
-    merchant_key: '46f0cd694581a',
-    passphrase: 'testpassphrase',
-    url: 'https://sandbox.payfast.co.za/eng/process',
-    
-    // For Production (when you go live):
-    // merchant_id: 'YOUR_LIVE_MERCHANT_ID',
-    // merchant_key: 'YOUR_LIVE_MERCHANT_KEY',
-    // url: 'https://www.payfast.co.za/eng/process'
+    merchant_id: '34934721',
+    merchant_key: 'nbmhut4xj9wi9',
+    passphrase: 'MelomeMoney2020',
+    url: 'https://www.payfast.co.za/eng/process',
+  };
+
+  // Simple MD5 hash function that works in browser
+  const md5 = (string) => {
+    function rotateLeft(value, amount) {
+      return (value << amount) | (value >>> (32 - amount));
+    }
+
+    function addUnsigned(x, y) {
+      const x1 = x & 0xFFFF;
+      const y1 = y & 0xFFFF;
+      const x2 = x >>> 16;
+      const y2 = y >>> 16;
+      return ((((x1 + y1) & 0xFFFF) + ((((x2 + y2) & 0xFFFF) << 16))) >>> 0);
+    }
+
+    function F(x, y, z) { return (x & y) | ((~x) & z); }
+    function G(x, y, z) { return (x & z) | (y & (~z)); }
+    function H(x, y, z) { return x ^ y ^ z; }
+    function I(x, y, z) { return y ^ (x | (~z)); }
+
+    function FF(a, b, c, d, x, s, ac) {
+      a = addUnsigned(a, addUnsigned(addUnsigned(F(b, c, d), x), ac));
+      return addUnsigned(rotateLeft(a, s), b);
+    }
+    function GG(a, b, c, d, x, s, ac) {
+      a = addUnsigned(a, addUnsigned(addUnsigned(G(b, c, d), x), ac));
+      return addUnsigned(rotateLeft(a, s), b);
+    }
+    function HH(a, b, c, d, x, s, ac) {
+      a = addUnsigned(a, addUnsigned(addUnsigned(H(b, c, d), x), ac));
+      return addUnsigned(rotateLeft(a, s), b);
+    }
+    function II(a, b, c, d, x, s, ac) {
+      a = addUnsigned(a, addUnsigned(addUnsigned(I(b, c, d), x), ac));
+      return addUnsigned(rotateLeft(a, s), b);
+    }
+
+    const blocks = [];
+    let i;
+    let length = string.length;
+    let wordCount = (((length + 8) >> 6) + 1) * 16;
+    for (i = 0; i < wordCount; i++) {
+      blocks[i] = 0;
+    }
+    for (i = 0; i < length; i++) {
+      blocks[i >> 2] |= string.charCodeAt(i) << ((i % 4) * 8);
+    }
+    blocks[length >> 2] |= 0x80 << ((length % 4) * 8);
+    blocks[wordCount - 2] = length * 8;
+
+    let a = 0x67452301;
+    let b = 0xEFCDAB89;
+    let c = 0x98BADCFE;
+    let d = 0x10325476;
+
+    for (i = 0; i < wordCount; i += 16) {
+      const AA = a;
+      const BB = b;
+      const CC = c;
+      const DD = d;
+      
+      a = FF(a, b, c, d, blocks[i + 0], 7, 0xD76AA478);
+      d = FF(d, a, b, c, blocks[i + 1], 12, 0xE8C7B756);
+      c = FF(c, d, a, b, blocks[i + 2], 17, 0x242070DB);
+      b = FF(b, c, d, a, blocks[i + 3], 22, 0xC1BDCEEE);
+      a = FF(a, b, c, d, blocks[i + 4], 7, 0xF57C0FAF);
+      d = FF(d, a, b, c, blocks[i + 5], 12, 0x4787C62A);
+      c = FF(c, d, a, b, blocks[i + 6], 17, 0xA8304613);
+      b = FF(b, c, d, a, blocks[i + 7], 22, 0xFD469501);
+      a = FF(a, b, c, d, blocks[i + 8], 7, 0x698098D8);
+      d = FF(d, a, b, c, blocks[i + 9], 12, 0x8B44F7AF);
+      c = FF(c, d, a, b, blocks[i + 10], 17, 0xFFFF5BB1);
+      b = FF(b, c, d, a, blocks[i + 11], 22, 0x895CD7BE);
+      a = FF(a, b, c, d, blocks[i + 12], 7, 0x6B901122);
+      d = FF(d, a, b, c, blocks[i + 13], 12, 0xFD987193);
+      c = FF(c, d, a, b, blocks[i + 14], 17, 0xA679438E);
+      b = FF(b, c, d, a, blocks[i + 15], 22, 0x49B40821);
+      
+      a = GG(a, b, c, d, blocks[i + 1], 5, 0xF61E2562);
+      d = GG(d, a, b, c, blocks[i + 6], 9, 0xC040B340);
+      c = GG(c, d, a, b, blocks[i + 11], 14, 0x265E5A51);
+      b = GG(b, c, d, a, blocks[i + 0], 20, 0xE9B6C7AA);
+      a = GG(a, b, c, d, blocks[i + 5], 5, 0xD62F105D);
+      d = GG(d, a, b, c, blocks[i + 10], 9, 0x2441453);
+      c = GG(c, d, a, b, blocks[i + 15], 14, 0xD8A1E681);
+      b = GG(b, c, d, a, blocks[i + 4], 20, 0xE7D3FBC8);
+      a = GG(a, b, c, d, blocks[i + 9], 5, 0x21E1CDE6);
+      d = GG(d, a, b, c, blocks[i + 14], 9, 0xC33707D6);
+      c = GG(c, d, a, b, blocks[i + 3], 14, 0xF4D50D87);
+      b = GG(b, c, d, a, blocks[i + 8], 20, 0x455A14ED);
+      a = GG(a, b, c, d, blocks[i + 13], 5, 0xA9E3E905);
+      d = GG(d, a, b, c, blocks[i + 2], 9, 0xFCEFA3F8);
+      c = GG(c, d, a, b, blocks[i + 7], 14, 0x676F02D9);
+      b = GG(b, c, d, a, blocks[i + 12], 20, 0x8D2A4C8A);
+      
+      a = HH(a, b, c, d, blocks[i + 5], 4, 0xFFFA3942);
+      d = HH(d, a, b, c, blocks[i + 8], 11, 0x8771F681);
+      c = HH(c, d, a, b, blocks[i + 11], 16, 0x6D9D6122);
+      b = HH(b, c, d, a, blocks[i + 14], 23, 0xFDE5380C);
+      a = HH(a, b, c, d, blocks[i + 1], 4, 0xA4BEEA44);
+      d = HH(d, a, b, c, blocks[i + 4], 11, 0x4BDECFA9);
+      c = HH(c, d, a, b, blocks[i + 7], 16, 0xF6BB4B60);
+      b = HH(b, c, d, a, blocks[i + 10], 23, 0xBEBFBC70);
+      a = HH(a, b, c, d, blocks[i + 13], 4, 0x289B7EC6);
+      d = HH(d, a, b, c, blocks[i + 0], 11, 0xEAA127FA);
+      c = HH(c, d, a, b, blocks[i + 3], 16, 0xD4EF3085);
+      b = HH(b, c, d, a, blocks[i + 6], 23, 0x4881D05);
+      a = HH(a, b, c, d, blocks[i + 9], 4, 0xD9D4D039);
+      d = HH(d, a, b, c, blocks[i + 12], 11, 0xE6DB99E5);
+      c = HH(c, d, a, b, blocks[i + 15], 16, 0x1FA27CF8);
+      b = HH(b, c, d, a, blocks[i + 2], 23, 0xC4AC5665);
+      
+      a = II(a, b, c, d, blocks[i + 0], 6, 0xF4292244);
+      d = II(d, a, b, c, blocks[i + 7], 10, 0x432AFF97);
+      c = II(c, d, a, b, blocks[i + 14], 15, 0xAB9423A7);
+      b = II(b, c, d, a, blocks[i + 5], 21, 0xFC93A039);
+      a = II(a, b, c, d, blocks[i + 12], 6, 0x655B59C3);
+      d = II(d, a, b, c, blocks[i + 3], 10, 0x8F0CCC92);
+      c = II(c, d, a, b, blocks[i + 10], 15, 0xFFEFF47D);
+      b = II(b, c, d, a, blocks[i + 1], 21, 0x85845DD1);
+      a = II(a, b, c, d, blocks[i + 8], 6, 0x6FA87E4F);
+      d = II(d, a, b, c, blocks[i + 15], 10, 0xFE2CE6E0);
+      c = II(c, d, a, b, blocks[i + 6], 15, 0xA3014314);
+      b = II(b, c, d, a, blocks[i + 13], 21, 0x4E0811A1);
+      a = II(a, b, c, d, blocks[i + 4], 6, 0xF7537E82);
+      d = II(d, a, b, c, blocks[i + 11], 10, 0xBD3AF235);
+      c = II(c, d, a, b, blocks[i + 2], 15, 0x2AD7D2BB);
+      b = II(b, c, d, a, blocks[i + 9], 21, 0xEB86D391);
+      
+      a = addUnsigned(a, AA);
+      b = addUnsigned(b, BB);
+      c = addUnsigned(c, CC);
+      d = addUnsigned(d, DD);
+    }
+
+    const hex = (x) => {
+      const hexDigits = "0123456789abcdef";
+      let result = "";
+      for (let j = 0; j < 4; j++) {
+        result += hexDigits.charAt((x >> (j * 8 + 4)) & 0x0F) + hexDigits.charAt((x >> (j * 8)) & 0x0F);
+      }
+      return result;
+    };
+
+    return (hex(a) + hex(b) + hex(c) + hex(d)).toLowerCase();
   };
 
   const generateSignature = (data) => {
-    // Simple signature for testing - Replace with proper backend signature in production
+    // Create query string for signature
     const queryString = Object.keys(data)
       .sort()
       .map(key => `${key}=${encodeURIComponent(data[key].toString().trim())}`)
@@ -32,14 +171,8 @@ const Payment = ({ amount, itemName, itemDescription }) => {
       ? `${queryString}&passphrase=${PAYFAST_CONFIG.passphrase}`
       : queryString;
     
-    // Simple hash (not secure - for testing only)
-    let hash = 0;
-    for (let i = 0; i < signatureString.length; i++) {
-      const char = signatureString.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16);
+    // MD5 signature using browser-compatible function
+    return md5(signatureString);
   };
 
   const handlePayment = async () => {
@@ -59,7 +192,7 @@ const Payment = ({ amount, itemName, itemDescription }) => {
       amount: amount.toString(),
       item_name: itemName,
       item_description: itemDescription.substring(0, 100),
-      email_address: 'customer@example.com', // Replace with actual customer email
+      email_address: 'customer@example.com',
       name_first: 'Customer',
       name_last: 'Name',
       cell_number: '0780000000',
@@ -114,7 +247,7 @@ const Payment = ({ amount, itemName, itemDescription }) => {
                 onClick={() => setPaymentMethod('card')}
               >
                 <input type="radio" checked={paymentMethod === 'card'} readOnly className="text-emerald-500" />
-                <span className="text-2xl">ðŸ’³</span>
+                <span className="text-2xl">💳</span>
                 <div>
                   <p className="font-bold">Credit/Debit Card</p>
                   <p className="text-slate-400 text-xs">Visa, Mastercard, American Express</p>
@@ -130,7 +263,7 @@ const Payment = ({ amount, itemName, itemDescription }) => {
                 onClick={() => setPaymentMethod('eft')}
               >
                 <input type="radio" checked={paymentMethod === 'eft'} readOnly />
-                <span className="text-2xl">ðŸ¦</span>
+                <span className="text-2xl">🏦</span>
                 <div>
                   <p className="font-bold">Instant EFT</p>
                   <p className="text-slate-400 text-xs">Direct bank transfer</p>
@@ -146,7 +279,7 @@ const Payment = ({ amount, itemName, itemDescription }) => {
                 onClick={() => setPaymentMethod('mobicred')}
               >
                 <input type="radio" checked={paymentMethod === 'mobicred'} readOnly />
-                <span className="text-2xl">ðŸ“±</span>
+                <span className="text-2xl">📱</span>
                 <div>
                   <p className="font-bold">Mobicred</p>
                   <p className="text-slate-400 text-xs">Buy now, pay monthly</p>
@@ -184,9 +317,9 @@ const Payment = ({ amount, itemName, itemDescription }) => {
               className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {processing ? (
-                <>Processing... <span className="animate-spin">â³</span></>
+                <>Processing... <span className="animate-spin">⏳</span></>
               ) : (
-                <>Pay R{amount} with PayFast â†’</>
+                <>Pay R{amount} with PayFast →</>
               )}
             </button>
 
