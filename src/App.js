@@ -16,37 +16,8 @@ import Notifications from './components/Portal/Notifications';
 import WeChatButton from './components/WeChatButton';
 import Contact from './components/Contact';
 import Tracking from './components/Tracking';
-
-// Temporary placeholder components until Driver components are created
-const DriverLogin = () => {
-  return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="bg-slate-900 p-8 rounded-lg border border-slate-800 max-w-md w-full">
-        <h2 className="text-2xl font-bold text-center mb-6 text-emerald-400">Driver Login</h2>
-        <p className="text-slate-400 text-center mb-4">Driver portal coming soon.</p>
-        <Link to="/" className="block text-center bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition">
-          Return to Home
-        </Link>
-      </div>
-    </div>
-  );
-};
-
-const DriverDashboard = () => {
-  return (
-    <div className="min-h-screen bg-slate-950 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-emerald-400 mb-8">Driver Dashboard</h1>
-        <div className="bg-slate-900 rounded-lg border border-slate-800 p-6">
-          <p className="text-slate-400">Driver dashboard coming soon.</p>
-          <Link to="/" className="inline-block mt-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-6 py-2 rounded font-bold transition">
-            Back to Home
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
+import DriverLogin from './components/Driver/DriverLogin';
+import DriverDashboard from './components/Driver/DriverDashboard';
 
 function LandingPage() {
   const [request, setRequest] = useState("");
@@ -134,18 +105,17 @@ function LandingPage() {
             <span>🇨🇳</span> 中 EN
           </Link>
         </div>
-        <Link to="/portal/login" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-5 py-2 rounded-sm font-bold transition text-sm uppercase">
-          Customer Portal →
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/driver/login" className="text-slate-400 hover:text-emerald-400 text-sm transition">
+            Driver Portal
+          </Link>
+          <Link to="/portal/login" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-5 py-2 rounded-sm font-bold transition text-sm uppercase">
+            Customer Portal →
+          </Link>
+        </div>
       </nav>
 
-      {/* Demo Payment Button - Remove in production */}
-      <div className="bg-emerald-500/10 border border-emerald-500/20 py-2 px-4 text-center">
-        <p className="text-sm text-emerald-400">
-          🧪 Demo Payment: <Link to="/payment" className="underline font-bold">Click here to test PayFast integration</Link>
-        </p>
-      </div>
-
+      {/* Main Hero Section */}
       <section className="relative py-24 px-6 text-center lg:text-left lg:flex lg:items-center max-w-7xl mx-auto">
         <div className="lg:w-1/2">
           <div className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full mb-6">
@@ -224,6 +194,7 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Stats Section */}
       <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 border-y border-slate-800">
         <div className="text-center"><div className="text-3xl font-black text-emerald-400">14</div><div className="text-xs uppercase tracking-wider text-slate-500">Countries in Network</div></div>
         <div className="text-center"><div className="text-3xl font-black text-emerald-400">Level 1</div><div className="text-xs uppercase tracking-wider text-slate-500">B-BBEE Rating</div></div>
@@ -231,6 +202,7 @@ function LandingPage() {
         <div className="text-center"><div className="text-3xl font-black text-emerald-400">2</div><div className="text-xs uppercase tracking-wider text-slate-500">Operational Hubs</div></div>
       </div>
 
+      {/* Services Section */}
       <section id="services" className="py-24 bg-slate-900/30">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
@@ -249,6 +221,7 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Problem & Solution Section */}
       <section className="py-24 bg-slate-950">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12">
           <div className="bg-red-950/20 p-8 rounded-lg border border-red-500/20">
@@ -270,6 +243,7 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Roadmap Section */}
       <section id="roadmap" className="py-24 bg-slate-900/30">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl font-bold text-center mb-4">2026–2030: <span className="text-emerald-400">Phased growth</span></h2>
@@ -289,6 +263,7 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Gallery Section */}
       <section id="gallery" className="py-24 bg-slate-950">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl font-bold text-center mb-4">Operations <span className="text-emerald-500">Gallery</span></h2>
@@ -304,6 +279,7 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Team Section */}
       <section id="team" className="py-24 bg-slate-900/30">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl font-bold text-center mb-4">Leadership <span className="text-emerald-500">Command</span></h2>
@@ -322,6 +298,7 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Contact Section */}
       <section id="contact" className="py-24 bg-slate-950">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl font-bold text-center mb-4">Connect with <span className="text-emerald-500">Command</span></h2>
@@ -354,13 +331,14 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="bg-slate-900 border-t border-slate-800 py-12">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm text-slate-500">
           <p>© 2026 Melome (Pty) Ltd — SADC Logistics Network</p>
         </div>
       </footer>
 
-      {/* WeChat Button - Contains both WhatsApp and WeChat */}
+      {/* WeChat & WhatsApp Button */}
       <WeChatButton />
     </div>
   );
@@ -390,7 +368,7 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Driver Portal - Using placeholder components */}
+          {/* Driver Portal */}
           <Route path="/driver/login" element={<DriverLogin />} />
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
           
