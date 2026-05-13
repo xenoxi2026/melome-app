@@ -49,17 +49,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const userData = DEMO_USERS[email];
     if (userData && userData.password === password) {
-      // Create user object without password
       const { password: _, ...userWithoutPassword } = userData;
       setUser(userWithoutPassword);
       localStorage.setItem('melome_user', JSON.stringify(userWithoutPassword));
       
-      // Save to users array for notifications
       const users = JSON.parse(localStorage.getItem('melome_users') || '[]');
       if (!users.find(u => u.id === userWithoutPassword.id)) {
         users.push(userWithoutPassword);

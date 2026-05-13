@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Truck } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -33,16 +33,14 @@ export const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        {/* Logo and Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-500 rounded-2xl mb-4">
-            <span className="text-4xl text-white">🚚</span>
+            <Truck className="text-4xl text-white" size={40} />
           </div>
           <h1 className="text-3xl font-bold text-white">Melome Portal</h1>
           <p className="text-slate-400 mt-2">Customer & Admin Dashboard</p>
         </div>
 
-        {/* Login Card */}
         <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 shadow-2xl">
           {error && (
             <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 mb-6">
@@ -62,7 +60,7 @@ export const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
-                  placeholder="client@melome.com"
+                  placeholder="Enter your email"
                   required
                 />
               </div>
@@ -79,7 +77,7 @@ export const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
-                  placeholder="••••••"
+                  placeholder="Enter your password"
                   required
                 />
               </div>
@@ -94,27 +92,11 @@ export const Login = () => {
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 pt-6 border-t border-slate-700">
-            <p className="text-xs text-slate-500 text-center mb-3">Demo Accounts:</p>
-            <div className="space-y-2 text-xs">
-              <div className="bg-slate-900 p-2 rounded">
-                <p className="text-emerald-400 font-mono">client@melome.com / client123</p>
-                <p className="text-slate-500">Client Portal Access</p>
-              </div>
-              <div className="bg-slate-900 p-2 rounded">
-                <p className="text-emerald-400 font-mono">admin@melome.com / admin123</p>
-                <p className="text-slate-500">Admin Dashboard Access</p>
-              </div>
-            </div>
+          <div className="mt-6 text-center">
+            <a href="/" className="text-slate-400 hover:text-emerald-400 text-sm transition">
+              ← Back to Melome Website
+            </a>
           </div>
-        </div>
-
-        {/* Back to Website Link */}
-        <div className="text-center mt-6">
-          <a href="/" className="text-slate-400 hover:text-emerald-400 text-sm transition">
-            ← Back to Melome Website
-          </a>
         </div>
       </div>
     </div>

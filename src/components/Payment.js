@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { CreditCard, Lock, Shield, CheckCircle } from 'lucide-react';
 
-const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => {
+const Payment = ({ amount, itemName, itemDescription, customerEmail, customerName, customerPhone }) => {
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
 
-  // PayFast Configuration - YOUR LIVE CREDENTIALS
+  // LIVE PAYFAST CREDENTIALS
   const PAYFAST_CONFIG = {
     merchant_id: '34934721',
     merchant_key: 'nbmhut4xj9wi9',
@@ -13,7 +13,7 @@ const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => 
     url: 'https://www.payfast.co.za/eng/process',
   };
 
-  // Simple MD5 hash function that works in browser
+  // Simple MD5 hash function
   const md5 = (string) => {
     function rotateLeft(value, amount) {
       return (value << amount) | (value >>> (32 - amount));
@@ -160,28 +160,23 @@ const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => 
   };
 
   const generateSignature = (data) => {
-    // Create query string for signature
     const queryString = Object.keys(data)
       .sort()
       .map(key => `${key}=${encodeURIComponent(data[key].toString().trim())}`)
       .join('&');
     
-    // Add passphrase if set
     const signatureString = PAYFAST_CONFIG.passphrase 
       ? `${queryString}&passphrase=${PAYFAST_CONFIG.passphrase}`
       : queryString;
     
-    // MD5 signature using browser-compatible function
     return md5(signatureString);
   };
 
   const handlePayment = async () => {
     setProcessing(true);
 
-    // Generate unique order ID
     const orderId = `MEL${Date.now()}${Math.floor(Math.random() * 1000)}`;
     
-    // Prepare payment data
     const paymentData = {
       merchant_id: PAYFAST_CONFIG.merchant_id,
       merchant_key: PAYFAST_CONFIG.merchant_key,
@@ -192,16 +187,13 @@ const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => 
       amount: amount.toString(),
       item_name: itemName,
       item_description: itemDescription.substring(0, 100),
-      email_address: 'customer@example.com',
-      name_first: 'Customer',
-      name_last: 'Name',
-      cell_number: '0780000000',
+      email_address: customerEmail || 'info@melome.co.za',
+      name_first: customerName || 'Customer',
+      cell_number: customerPhone || '0780000000',
     };
 
-    // Add signature
     paymentData.signature = generateSignature(paymentData);
 
-    // Create form and submit
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = PAYFAST_CONFIG.url;
@@ -226,7 +218,6 @@ const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => 
     <div className="min-h-screen bg-slate-950 py-20 px-4">
       <div className="max-w-md mx-auto">
         <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
-          {/* Header */}
           <div className="bg-emerald-500/10 p-6 border-b border-slate-800">
             <h3 className="text-xl font-bold text-emerald-400 flex items-center gap-2">
               <CreditCard size={24} />
@@ -235,7 +226,6 @@ const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => 
             <p className="text-slate-400 text-sm mt-1">Pay securely with PayFast</p>
           </div>
 
-          {/* Payment Methods */}
           <div className="p-6">
             <div className="space-y-3 mb-6">
               <div 
@@ -246,11 +236,11 @@ const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => 
                 }`}
                 onClick={() => setPaymentMethod('card')}
               >
-                <input type="radio" checked={paymentMethod === 'card'} readOnly className="text-emerald-500" />
+                <input type="radio" checked={paymentMethod === 'card'} readOnly />
                 <span className="text-2xl">💳</span>
                 <div>
                   <p className="font-bold">Credit/Debit Card</p>
-                  <p className="text-slate-400 text-xs">Visa, Mastercard, American Express</p>
+                  <p className="text-slate-400 text-xs">Visa, Mastercard</p>
                 </div>
               </div>
 
@@ -269,63 +259,31 @@ const Payment = ({ amount, itemName, itemDescription, onSuccess, onCancel }) => 
                   <p className="text-slate-400 text-xs">Direct bank transfer</p>
                 </div>
               </div>
-
-              <div 
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ${
-                  paymentMethod === 'mobicred' 
-                    ? 'border-emerald-500 bg-emerald-500/10' 
-                    : 'border-slate-700 hover:border-slate-600'
-                }`}
-                onClick={() => setPaymentMethod('mobicred')}
-              >
-                <input type="radio" checked={paymentMethod === 'mobicred'} readOnly />
-                <span className="text-2xl">📱</span>
-                <div>
-                  <p className="font-bold">Mobicred</p>
-                  <p className="text-slate-400 text-xs">Buy now, pay monthly</p>
-                </div>
-              </div>
             </div>
 
-            {/* Payment Summary */}
             <div className="bg-slate-800 rounded-lg p-4 mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-slate-400">Subtotal:</span>
-                <span className="text-white">R{amount}</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-slate-400">Fee:</span>
-                <span className="text-white">R{(amount * 0.035).toFixed(2)}</span>
-              </div>
-              <div className="border-t border-slate-700 pt-2 mt-2 flex justify-between items-center">
-                <span className="font-bold text-lg">Total:</span>
-                <span className="text-emerald-400 font-bold text-xl">R{(amount + (amount * 0.035)).toFixed(2)}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Total:</span>
+                <span className="text-emerald-400 font-bold text-xl">R{amount}</span>
               </div>
             </div>
 
-            {/* Security Badges */}
             <div className="flex items-center justify-center gap-4 mb-6 text-xs text-slate-500">
-              <div className="flex items-center gap-1"><Lock size={12} /> PCI Compliant</div>
-              <div className="flex items-center gap-1"><Shield size={12} /> 3D Secure</div>
-              <div className="flex items-center gap-1"><CheckCircle size={12} /> Instant Confirmation</div>
+              <div className="flex items-center gap-1"><Lock size={12} /> Secure</div>
+              <div className="flex items-center gap-1"><Shield size={12} /> Protected</div>
+              <div className="flex items-center gap-1"><CheckCircle size={12} /> Instant</div>
             </div>
 
-            {/* Pay Button */}
             <button
               onClick={handlePayment}
               disabled={processing}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-4 rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {processing ? (
-                <>Processing... <span className="animate-spin">⏳</span></>
-              ) : (
-                <>Pay R{amount} with PayFast →</>
-              )}
+              {processing ? 'Processing...' : `Pay R${amount} →`}
             </button>
 
             <p className="text-slate-500 text-xs text-center mt-4">
-              You will be redirected to PayFast's secure payment page.
-              No card details are stored on our servers.
+              Redirecting to PayFast secure payment page
             </p>
           </div>
         </div>
