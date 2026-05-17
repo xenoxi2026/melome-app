@@ -1,89 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { notifyPaymentConfirmed, notifyShipmentDispatched, notifyDelivered, getClientDetails } from '../services/notificationService';
+import { Link, useNavigate } from 'react-router-dom';
+import { 
+  Users, Package, TrendingUp, Truck, DollarSign, 
+  CheckCircle, Clock, AlertCircle, Eye, Edit, 
+  Trash2, PlusCircle, RefreshCw, Bell, BellOff,
+  Search, Filter, Download, ChevronRight, X,
+  MapPin, Phone, Mail, Calendar, Star, Shield
+} from 'lucide-react';
+import { notifyPaymentConfirmed, notifyShipmentDispatched, notifyDelivered } from '../services/notificationService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AdminDashboard = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [quotes, setQuotes] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState('quotes');
+  const [activeTab, setActiveTab] = useState('overview');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [showDriverModal, setShowDriverModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [drivers, setDrivers] = useState([
+    { id: 101, name: 'Sipho Dlamini', email: 'driver@melome.com', phone: '+27784567890', status: 'available', vehicle: 'Van - LD123GP', rating: 4.8, deliveries: 45 },
+    { id: 102, name: 'Thabo Nkosi', email: 'thabo.driver@melome.com', phone: '+27785678901', status: 'busy', vehicle: 'Truck - MD456GP', rating: 4.9, deliveries: 38 },
+    { id: 103, name: 'Mike Johnson', email: 'mike@melome.com', phone: '+27786789012', status: 'available', vehicle: 'Bike - BK789MP', rating: 4.7, deliveries: 12 },
+  ]);
 
   useEffect(() => {
-    // Load data from localStorage
+    loadData();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadData = () => {
     const savedQuotes = localStorage.getItem('melome_quotes');
     const savedOrders = localStorage.getItem('melome_orders');
     
     if (savedQuotes) setQuotes(JSON.parse(savedQuotes));
     if (savedOrders) setOrders(JSON.parse(savedOrders));
-  }, []);
-
-  // Get client details from userId or email
-  const getClientFromOrder = (order) => {
-    // Try to find client from localStorage users
-    const users = JSON.parse(localStorage.getItem('melome_users') || '[]');
-    let client = users.find(u => u.name === order.clientName);
-    
-    if (!client) {
-      // Default client based on name
-      client = {
-        id: order.clientId || 1,
-        name: order.clientName,
-        email: 'client@melome.com',
-        phone: '+27781234567'
-      };
-    }
-    return client;
+    setLoading(false);
   };
 
-  const acceptQuote = async (quoteId) => {
-    const updatedQuotes = quotes.map(q => 
-      q.id === quoteId ? { ...q, status: 'accepted' } : q
+  const assignDriver = (orderId, driverId) => {
+    const driver = drivers.find(d => d.id === parseInt(driverId));
+    if (!driver) return;
+    
+    const updatedOrders = orders.map(o =>
+      o.id === orderId ? { ...o, driver: driver.name, driverId: driver.id, status: 'assigned', assignedAt: new Date().toISOString() } : o
     );
-    setQuotes(updatedQuotes);
-    localStorage.setItem('melome_quotes', JSON.stringify(updatedQuotes));
-    
-    // Create order from quote
-    const quote = quotes.find(q => q.id === quoteId);
-    if (quote) {
-      const newOrder = {
-        id: 'ORD-' + Date.now(),
-        quoteId: quote.id,
-        clientId: quote.clientId,
-        clientName: quote.clientName,
-        clientEmail: quote.clientEmail,
-        amount: quote.estimatedPrice,
-        status: 'pending',
-        date: new Date().toISOString(),
-        tracking: 'MEL' + Math.floor(Math.random() * 1000000)
-      };
-      const updatedOrders = [...orders, newOrder];
-      setOrders(updatedOrders);
-      localStorage.setItem('melome_orders', JSON.stringify(updatedOrders));
-      
-      // Send notification to client
-      if (notificationsEnabled) {
-        const client = {
-          name: quote.clientName,
-          email: quote.clientEmail || 'client@melome.com',
-          phone: '+27781234567'
-        };
-        await notifyPaymentConfirmed(client, newOrder);
-        alert('Quote accepted! Order created and client notified.');
-      } else {
-        alert('Quote accepted! Order created.');
-      }
-    }
-  };
-
-  const declineQuote = (quoteId) => {
-    if (window.confirm('Decline this quote?')) {
-      const updatedQuotes = quotes.map(q => 
-        q.id === quoteId ? { ...q, status: 'declined' } : q
-      );
-      setQuotes(updatedQuotes);
-      localStorage.setItem('melome_quotes', JSON.stringify(updatedQuotes));
-      alert('Quote declined');
-    }
+    setOrders(updatedOrders);
+    localStorage.setItem('melome_orders', JSON.stringify(updatedOrders));
+    setShowDriverModal(false);
+    setSelectedOrder(null);
+    alert(`✅ Order assigned to ${driver.name}`);
   };
 
   const updateStatus = async (orderId, newStatus) => {
@@ -96,7 +67,6 @@ const AdminDashboard = () => {
     setOrders(updatedOrders);
     localStorage.setItem('melome_orders', JSON.stringify(updatedOrders));
     
-    // Send notifications based on status change
     if (notificationsEnabled) {
       const client = {
         name: order.clientName,
@@ -104,218 +74,215 @@ const AdminDashboard = () => {
         phone: '+27781234567'
       };
       
-      if (newStatus === 'assigned' || newStatus === 'in-transit') {
-        await notifyShipmentDispatched(client, order, '2-3 business days');
-        alert(`Status updated to ${newStatus} - Client notified via email/SMS`);
+      if (newStatus === 'assigned') {
+        await notifyShipmentDispatched(client, { ...order, trackingNumber: order.tracking }, '2-3 business days');
+        alert(`📧 Order assigned - Client notified via email/SMS`);
+      } else if (newStatus === 'in-transit') {
+        await notifyShipmentDispatched(client, { ...order, trackingNumber: order.tracking }, '1-2 business days');
+        alert(`📧 Order in transit - Client notified`);
       } else if (newStatus === 'delivered') {
-        await notifyDelivered(client, order);
-        alert(`Status updated to Delivered - Client notified via email/SMS`);
-      } else {
-        alert(`Status updated to ${newStatus}`);
+        await notifyDelivered(client, { ...order, trackingNumber: order.tracking });
+        alert(`📧 Order delivered - Client notified`);
       }
-    } else {
-      alert(`Status updated to ${newStatus}`);
     }
   };
 
   const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'pending_payment');
   const activeOrders = orders.filter(o => o.status !== 'delivered');
+  const completedOrders = orders.filter(o => o.status === 'delivered');
   const totalRevenue = orders.reduce((sum, o) => sum + (o.amount || 0), 0);
+  const monthlyRevenue = orders.filter(o => new Date(o.date).getMonth() === new Date().getMonth()).reduce((sum, o) => sum + (o.amount || 0), 0);
+
+  const stats = [
+    { label: 'Pending Quotes', value: pendingQuotes.length, color: '#f59e0b', icon: Clock },
+    { label: 'Active Orders', value: activeOrders.length, color: '#3b82f6', icon: Package },
+    { label: 'Completed Orders', value: completedOrders.length, color: '#10b981', icon: CheckCircle },
+    { label: 'Total Revenue', value: `R${totalRevenue.toLocaleString()}`, color: '#10b981', icon: DollarSign },
+    { label: 'Monthly Revenue', value: `R${monthlyRevenue.toLocaleString()}`, color: '#8b5cf6', icon: TrendingUp },
+    { label: 'Active Drivers', value: drivers.filter(d => d.status === 'available').length, color: '#06b6d4', icon: Truck },
+  ];
 
   const styles = {
     container: { minHeight: '100vh', background: '#0f172a' },
-    header: { background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px' },
-    headerContent: { maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    header: { background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', position: 'sticky', top: 0, zIndex: 50 },
+    headerContent: { maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' },
     title: { fontSize: '24px', fontWeight: 'bold', color: 'white' },
-    logout: { color: '#94a3b8', textDecoration: 'none' },
-    main: { maxWidth: '1280px', margin: '0 auto', padding: '24px' },
-    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' },
-    statCard: { background: '#1e293b', padding: '20px', borderRadius: '8px' },
-    statLabel: { color: '#94a3b8', fontSize: '14px' },
-    statValue: { fontSize: '32px', fontWeight: 'bold', marginTop: '8px' },
-    tabs: { display: 'flex', gap: '8px', borderBottom: '1px solid #334155', marginBottom: '24px' },
-    tabButton: { padding: '8px 16px', background: 'none', border: 'none', fontWeight: 'bold', cursor: 'pointer' },
-    contentCard: { background: '#1e293b', borderRadius: '8px' },
-    quoteItem: { padding: '20px', borderBottom: '1px solid #334155' },
-    quoteHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px' },
-    quoteId: { color: '#94a3b8', fontSize: '12px' },
-    clientName: { color: 'white', fontWeight: 'bold', marginTop: '4px' },
-    price: { color: '#10b981', fontSize: '20px', fontWeight: 'bold' },
-    buttonGroup: { display: 'flex', gap: '12px', marginTop: '12px' },
-    acceptBtn: { background: '#10b981', color: 'black', padding: '8px 20px', borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer' },
-    declineBtn: { background: 'rgba(239,68,68,0.2)', color: '#ef4444', padding: '8px 20px', borderRadius: '6px', fontWeight: 'bold', border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer' },
-    orderItem: { padding: '20px', borderBottom: '1px solid #334155' },
-    orderHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px' },
-    orderId: { color: '#10b981', fontSize: '12px' },
-    select: { background: '#0f172a', border: '1px solid #334155', padding: '8px', borderRadius: '6px', color: 'white', width: '200px' },
+    subtitle: { color: '#94a3b8', fontSize: '12px', marginTop: '4px' },
+    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' },
+    statCard: { background: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155', transition: 'all 0.3s' },
+    tabs: { display: 'flex', gap: '8px', borderBottom: '1px solid #334155', marginBottom: '24px', overflowX: 'auto' },
+    tabButton: { padding: '12px 20px', background: 'none', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s', whiteSpace: 'nowrap' },
+    contentCard: { background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' },
     table: { width: '100%', borderCollapse: 'collapse' },
-    th: { padding: '12px', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid #334155' },
-    td: { padding: '12px', borderBottom: '1px solid #334155' },
+    th: { padding: '16px', textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid #334155', fontSize: '12px', fontWeight: 'bold' },
+    td: { padding: '16px', borderBottom: '1px solid #334155', color: '#cbd5e1', fontSize: '14px' },
     emptyState: { padding: '60px', textAlign: 'center', color: '#64748b' },
-    statusBadge: { padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: 'white' },
-    notificationToggle: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }
+    statusBadge: (status) => ({
+      padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', display: 'inline-block',
+      background: status === 'delivered' ? '#10b98120' : status === 'in-transit' ? '#3b82f620' : status === 'assigned' ? '#8b5cf620' : '#f59e0b20',
+      color: status === 'delivered' ? '#10b981' : status === 'in-transit' ? '#3b82f6' : status === 'assigned' ? '#8b5cf6' : '#f59e0b'
+    }),
+    select: { background: '#0f172a', border: '1px solid #334155', padding: '8px 12px', borderRadius: '8px', color: 'white', fontSize: '14px', cursor: 'pointer' },
+    button: { background: '#10b981', color: '#0f172a', padding: '8px 16px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' },
+    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
+    modal: { background: '#1e293b', borderRadius: '16px', padding: '24px', maxWidth: '500px', width: '90%', border: '1px solid #334155' }
   };
 
-  const getStatusColor = (status) => {
-    if (status === 'delivered') return { background: '#10b981' };
-    if (status === 'in-transit') return { background: '#3b82f6' };
-    if (status === 'assigned') return { background: '#8b5cf6' };
-    return { background: '#f59e0b' };
-  };
+  const filteredOrders = orders.filter(o => 
+    o.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.clientName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <div style={{ color: '#10b981', fontSize: '18px' }}>Loading dashboard...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
+      {/* Header */}
       <header style={styles.header}>
         <div style={styles.headerContent}>
-          <h1 style={styles.title}>Admin Dashboard</h1>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <div style={styles.notificationToggle}>
-              <label style={{ color: '#94a3b8', fontSize: '14px' }}>🔔 Notifications</label>
+          <div>
+            <h1 style={styles.title}>Melome Command Center</h1>
+            <p style={styles.subtitle}>Welcome back, {user?.name || 'Admin'}</p>
+          </div>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button 
                 onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                style={{ 
-                  background: notificationsEnabled ? '#10b981' : '#ef4444', 
-                  color: 'white', 
-                  border: 'none', 
-                  padding: '4px 12px', 
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
+                style={{ background: '#334155', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
               >
-                {notificationsEnabled ? 'ON' : 'OFF'}
+                {notificationsEnabled ? <Bell size={18} color="#10b981" /> : <BellOff size={18} color="#94a3b8" />}
               </button>
+              <span style={{ color: '#94a3b8', fontSize: '12px' }}>
+                {notificationsEnabled ? 'Notifications ON' : 'Notifications OFF'}
+              </span>
             </div>
-            <Link to="/portal/logout" style={styles.logout}>Logout</Link>
+            <button onClick={logout} style={{ background: '#ef444420', border: '1px solid #ef4444', padding: '8px 16px', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}>
+              Logout
+            </button>
           </div>
         </div>
       </header>
 
-      <main style={styles.main}>
-        {/* Stats */}
+      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
+        {/* Stats Grid */}
         <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
-            <p style={styles.statLabel}>Pending Quotes</p>
-            <p style={{ ...styles.statValue, color: '#f59e0b' }}>{pendingQuotes.length}</p>
-          </div>
-          <div style={styles.statCard}>
-            <p style={styles.statLabel}>Active Orders</p>
-            <p style={{ ...styles.statValue, color: '#3b82f6' }}>{activeOrders.length}</p>
-          </div>
-          <div style={styles.statCard}>
-            <p style={styles.statLabel}>Total Revenue</p>
-            <p style={{ ...styles.statValue, color: '#10b981' }}>R{totalRevenue.toLocaleString()}</p>
-          </div>
-          <div style={styles.statCard}>
-            <p style={styles.statLabel}>Total Orders</p>
-            <p style={{ ...styles.statValue, color: 'white' }}>{orders.length}</p>
-          </div>
+          {stats.map((stat, i) => (
+            <div key={i} style={styles.statCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ color: '#94a3b8', fontSize: '14px' }}>{stat.label}</p>
+                  <p style={{ fontSize: '28px', fontWeight: 'bold', color: stat.color, marginTop: '8px' }}>{stat.value}</p>
+                </div>
+                <stat.icon size={32} style={{ color: stat.color, opacity: 0.5 }} />
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Tabs */}
         <div style={styles.tabs}>
-          <button onClick={() => setActiveTab('quotes')} style={{ ...styles.tabButton, color: activeTab === 'quotes' ? '#10b981' : '#94a3b8', borderBottom: activeTab === 'quotes' ? '2px solid #10b981' : 'none' }}>
-            Quotes ({pendingQuotes.length})
-          </button>
-          <button onClick={() => setActiveTab('orders')} style={{ ...styles.tabButton, color: activeTab === 'orders' ? '#10b981' : '#94a3b8', borderBottom: activeTab === 'orders' ? '2px solid #10b981' : 'none' }}>
-            Active Orders
-          </button>
-          <button onClick={() => setActiveTab('all-orders')} style={{ ...styles.tabButton, color: activeTab === 'all-orders' ? '#10b981' : '#94a3b8', borderBottom: activeTab === 'all-orders' ? '2px solid #10b981' : 'none' }}>
-            All Orders
-          </button>
+          {['overview', 'quotes', 'orders', 'drivers', 'analytics'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                ...styles.tabButton,
+                color: activeTab === tab ? '#10b981' : '#94a3b8',
+                borderBottom: activeTab === tab ? '2px solid #10b981' : 'none'
+              }}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)} {tab === 'quotes' && `(${pendingQuotes.length})`}
+            </button>
+          ))}
         </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+            {/* Recent Quotes */}
+            <div style={styles.contentCard}>
+              <div style={{ padding: '16px', borderBottom: '1px solid #334155' }}>
+                <h3 style={{ color: 'white', fontWeight: 'bold' }}>Recent Quotes</h3>
+              </div>
+              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {pendingQuotes.slice(0, 5).map(quote => (
+                  <div key={quote.id} style={{ padding: '16px', borderBottom: '1px solid #334155' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <p style={{ color: '#10b981', fontSize: '12px' }}>{quote.id}</p>
+                        <p style={{ color: 'white', fontWeight: 'bold' }}>{quote.clientName}</p>
+                        <p style={{ color: '#94a3b8', fontSize: '12px' }}>R{quote.estimatedPrice?.toLocaleString()}</p>
+                      </div>
+                      <button onClick={() => alert('Review quote functionality coming soon')} style={styles.button}>
+                        Review
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {pendingQuotes.length === 0 && <div style={styles.emptyState}>No pending quotes</div>}
+              </div>
+            </div>
+
+            {/* Recent Orders */}
+            <div style={styles.contentCard}>
+              <div style={{ padding: '16px', borderBottom: '1px solid #334155' }}>
+                <h3 style={{ color: 'white', fontWeight: 'bold' }}>Recent Orders</h3>
+              </div>
+              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {activeOrders.slice(0, 5).map(order => (
+                  <div key={order.id} style={{ padding: '16px', borderBottom: '1px solid #334155' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <p style={{ color: '#10b981', fontSize: '12px' }}>{order.id}</p>
+                        <p style={{ color: 'white', fontWeight: 'bold' }}>{order.clientName}</p>
+                        <span style={styles.statusBadge(order.status)}>{order.status}</span>
+                      </div>
+                      <ChevronRight size={18} color="#64748b" />
+                    </div>
+                  </div>
+                ))}
+                {activeOrders.length === 0 && <div style={styles.emptyState}>No active orders</div>}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Quotes Tab */}
         {activeTab === 'quotes' && (
           <div style={styles.contentCard}>
             {pendingQuotes.length === 0 ? (
-              <div style={styles.emptyState}>No pending quotes. Submit a quote from the website first.</div>
-            ) : (
-              pendingQuotes.map(quote => (
-                <div key={quote.id} style={styles.quoteItem}>
-                  <div style={styles.quoteHeader}>
-                    <div>
-                      <p style={styles.quoteId}>{quote.id}</p>
-                      <p style={styles.clientName}>{quote.clientName}</p>
-                    </div>
-                    <p style={styles.price}>R{quote.estimatedPrice?.toLocaleString()}</p>
-                  </div>
-                  <div style={styles.buttonGroup}>
-                    <button onClick={() => acceptQuote(quote.id)} style={styles.acceptBtn}>Accept & Notify</button>
-                    <button onClick={() => declineQuote(quote.id)} style={styles.declineBtn}>Decline</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* Active Orders Tab */}
-        {activeTab === 'orders' && (
-          <div style={styles.contentCard}>
-            {activeOrders.length === 0 ? (
-              <div style={styles.emptyState}>No active orders</div>
-            ) : (
-              activeOrders.map(order => (
-                <div key={order.id} style={styles.orderItem}>
-                  <div style={styles.orderHeader}>
-                    <div>
-                      <p style={styles.orderId}>{order.id}</p>
-                      <p style={styles.clientName}>{order.clientName}</p>
-                      <p style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>Tracking: {order.tracking}</p>
-                    </div>
-                    <p style={{ color: 'white', fontWeight: 'bold' }}>R{order.amount?.toLocaleString()}</p>
-                  </div>
-                  <select 
-                    onChange={(e) => updateStatus(order.id, e.target.value)} 
-                    value={order.status} 
-                    style={styles.select}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="assigned">Assigned to Driver (Send Alert)</option>
-                    <option value="picked-up">Picked Up</option>
-                    <option value="in-transit">In Transit (Send Alert)</option>
-                    <option value="delivered">Delivered (Send Alert)</option>
-                  </select>
-                  {notificationsEnabled && (
-                    <p style={{ color: '#10b981', fontSize: '11px', marginTop: '8px' }}>✓ Customer will be notified on status change</p>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* All Orders Tab */}
-        {activeTab === 'all-orders' && (
-          <div style={styles.contentCard}>
-            {orders.length === 0 ? (
-              <div style={styles.emptyState}>No orders yet</div>
+              <div style={styles.emptyState}>No pending quotes</div>
             ) : (
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th style={styles.th}>Order ID</th>
+                    <th style={styles.th}>Quote ID</th>
                     <th style={styles.th}>Client</th>
                     <th style={styles.th}>Amount</th>
-                    <th style={styles.th}>Tracking</th>
-                    <th style={styles.th}>Status</th>
                     <th style={styles.th}>Date</th>
+                    <th style={styles.th}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map(order => (
-                    <tr key={order.id}>
-                      <td style={styles.td}>{order.id}</td>
-                      <td style={styles.td}>{order.clientName}</td>
-                      <td style={styles.td}>R{order.amount?.toLocaleString()}</td>
-                      <td style={styles.td}>{order.tracking}</td>
+                  {pendingQuotes.map(quote => (
+                    <tr key={quote.id}>
+                      <td style={styles.td}>{quote.id}</td>
+                      <td style={styles.td}>{quote.clientName}</td>
+                      <td style={styles.td}>R{quote.estimatedPrice?.toLocaleString()}</td>
+                      <td style={styles.td}>{new Date(quote.createdAt).toLocaleDateString()}</td>
                       <td style={styles.td}>
-                        <span style={{ ...styles.statusBadge, ...getStatusColor(order.status) }}>
-                          {order.status}
-                        </span>
+                        <button onClick={() => alert('Quote management coming soon')} style={styles.button}>
+                          Process
+                        </button>
                       </td>
-                      <td style={styles.td}>{new Date(order.date).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -323,7 +290,186 @@ const AdminDashboard = () => {
             )}
           </div>
         )}
+
+        {/* Orders Tab */}
+        {activeTab === 'orders' && (
+          <div style={styles.contentCard}>
+            <div style={{ padding: '16px', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+              <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                <input
+                  type="text"
+                  placeholder="Search orders..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px 8px 36px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: 'white' }}
+                />
+              </div>
+              <button onClick={loadData} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#334155', border: 'none', padding: '8px 16px', borderRadius: '8px', color: 'white', cursor: 'pointer' }}>
+                <RefreshCw size={16} /> Refresh
+              </button>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Order ID</th>
+                    <th style={styles.th}>Client</th>
+                    <th style={styles.th}>Amount</th>
+                    <th style={styles.th}>Status</th>
+                    <th style={styles.th}>Driver</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrders.filter(o => o.status !== 'delivered').map(order => (
+                    <tr key={order.id}>
+                      <td style={styles.td}>{order.id}</td>
+                      <td style={styles.td}>{order.clientName}</td>
+                      <td style={styles.td}>R{order.amount?.toLocaleString()}</td>
+                      <td style={styles.td}>
+                        <select 
+                          value={order.status} 
+                          onChange={(e) => updateStatus(order.id, e.target.value)}
+                          style={styles.select}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="assigned">Assign & Notify</option>
+                          <option value="picked-up">Picked Up</option>
+                          <option value="in-transit">In Transit (Notify)</option>
+                          <option value="delivered">Delivered (Notify)</option>
+                        </select>
+                      </td>
+                      <td style={styles.td}>
+                        {order.driver || '—'}
+                        {order.status === 'pending' && (
+                          <button 
+                            onClick={() => { setSelectedOrder(order); setShowDriverModal(true); }}
+                            style={{ marginLeft: '8px', background: '#334155', border: 'none', padding: '4px 8px', borderRadius: '4px', color: 'white', cursor: 'pointer', fontSize: '10px' }}
+                          >
+                            Assign
+                          </button>
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        <Link to={`/tracking?order=${order.id}`} style={{ color: '#10b981', textDecoration: 'none' }}>
+                          Track
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Drivers Tab */}
+        {activeTab === 'drivers' && (
+          <div style={styles.contentCard}>
+            <div style={{ padding: '16px', borderBottom: '1px solid #334155' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ color: 'white', fontWeight: 'bold' }}>Driver Fleet</h3>
+                <button style={styles.button}>+ Add Driver</button>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', padding: '16px' }}>
+              {drivers.map(driver => (
+                <div key={driver.id} style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <Truck size={20} color="#10b981" />
+                        <p style={{ color: 'white', fontWeight: 'bold' }}>{driver.name}</p>
+                      </div>
+                      <p style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '4px' }}>{driver.email}</p>
+                      <p style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '4px' }}>{driver.vehicle}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Star size={14} color="#f59e0b" />
+                          <span style={{ color: 'white', fontSize: '12px' }}>{driver.rating}</span>
+                        </div>
+                        <span style={{ color: '#94a3b8', fontSize: '12px' }}>📦 {driver.deliveries}</span>
+                      </div>
+                    </div>
+                    <span style={{
+                      padding: '4px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold',
+                      background: driver.status === 'available' ? '#10b98120' : '#f59e0b20',
+                      color: driver.status === 'available' ? '#10b981' : '#f59e0b'
+                    }}>
+                      {driver.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px' }}>
+            <div style={styles.contentCard}>
+              <div style={{ padding: '16px', borderBottom: '1px solid #334155' }}>
+                <h3 style={{ color: 'white', fontWeight: 'bold' }}>Revenue Overview</h3>
+              </div>
+              <div style={{ padding: '24px', textAlign: 'center' }}>
+                <p style={{ fontSize: '48px', fontWeight: 'bold', color: '#10b981' }}>R{totalRevenue.toLocaleString()}</p>
+                <p style={{ color: '#94a3b8', marginTop: '8px' }}>Total Lifetime Revenue</p>
+                <p style={{ color: '#8b5cf6', marginTop: '16px' }}>+{((monthlyRevenue / (totalRevenue - monthlyRevenue || 1)) * 100).toFixed(1)}% this month</p>
+              </div>
+            </div>
+            <div style={styles.contentCard}>
+              <div style={{ padding: '16px', borderBottom: '1px solid #334155' }}>
+                <h3 style={{ color: 'white', fontWeight: 'bold' }}>Order Statistics</h3>
+              </div>
+              <div style={{ padding: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <span style={{ color: '#94a3b8' }}>Completion Rate</span>
+                  <span style={{ color: '#10b981', fontWeight: 'bold' }}>{orders.length ? Math.round((completedOrders.length / orders.length) * 100) : 0}%</span>
+                </div>
+                <div style={{ height: '8px', background: '#334155', borderRadius: '4px', overflow: 'hidden', marginBottom: '24px' }}>
+                  <div style={{ width: `${orders.length ? (completedOrders.length / orders.length) * 100 : 0}%`, height: '100%', background: '#10b981' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+                  <div><p style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>{activeOrders.length}</p><p style={{ color: '#94a3b8', fontSize: '12px' }}>Active</p></div>
+                  <div><p style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>{completedOrders.length}</p><p style={{ color: '#94a3b8', fontSize: '12px' }}>Completed</p></div>
+                  <div><p style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>{pendingQuotes.length}</p><p style={{ color: '#94a3b8', fontSize: '12px' }}>Pending</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Driver Assignment Modal */}
+      {showDriverModal && selectedOrder && (
+        <div style={styles.modalOverlay} onClick={() => setShowDriverModal(false)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ color: 'white', fontWeight: 'bold' }}>Assign Driver - {selectedOrder.id}</h3>
+              <button onClick={() => setShowDriverModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={20} color="#94a3b8" />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {drivers.filter(d => d.status === 'available').map(driver => (
+                <button
+                  key={driver.id}
+                  onClick={() => assignDriver(selectedOrder.id, driver.id)}
+                  style={{ textAlign: 'left', padding: '12px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  <p style={{ color: 'white', fontWeight: 'bold' }}>{driver.name}</p>
+                  <p style={{ color: '#94a3b8', fontSize: '12px' }}>{driver.vehicle}</p>
+                </button>
+              ))}
+              {drivers.filter(d => d.status === 'available').length === 0 && (
+                <p style={{ color: '#ef4444', textAlign: 'center' }}>No drivers available</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -88,9 +88,6 @@ function LandingPage() {
     { title: "Pan-African Network", location: "14 Countries", img: "/pan-african-network12.png" }
   ];
 
-  // Add to Routes:
-<Route path="/pay" element={<PaymentTest />} />
-
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans">
       <nav className="flex justify-between items-center p-6 bg-slate-900/90 backdrop-blur-sm border-b border-slate-800 sticky top-0 z-50">
@@ -110,6 +107,9 @@ function LandingPage() {
           </Link>
         </div>
         <div className="flex items-center gap-3">
+          <Link to="/pay" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-bold text-sm transition">
+            Pay Now
+          </Link>
           <Link to="/driver/login" className="text-slate-400 hover:text-emerald-400 text-sm transition">
             Driver Portal
           </Link>
@@ -118,13 +118,6 @@ function LandingPage() {
           </Link>
         </div>
       </nav>
-
-<Link 
-  to="/payment" 
-  className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-sm font-bold transition text-sm uppercase"
->
-  Pay Now
-</Link>
 
       <section className="relative py-24 px-6 text-center lg:text-left lg:flex lg:items-center max-w-7xl mx-auto">
         <div className="lg:w-1/2">
@@ -228,10 +221,6 @@ function LandingPage() {
           </div>
         </div>
       </section>
-
-<Link to="/pay" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-bold text-sm transition">
-  Pay Now
-</Link>
 
       <section className="py-24 bg-slate-950">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12">
@@ -367,7 +356,6 @@ function App() {
           <Route path="/driver/login" element={<DriverLogin />} />
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
           <Route path="/tracking" element={<Tracking />} />
-          <Route path="/payment" element={<Payment amount={500} itemName="Melome Logistics Service" itemDescription="Professional logistics and delivery service across SADC" />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/cancel" element={<PaymentCancel />} />
           <Route path="/contact" element={<Contact />} />
