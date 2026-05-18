@@ -31,6 +31,9 @@ function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuoteSuccess, setShowQuoteSuccess] = useState(false);
   const [showContactSuccess, setShowContactSuccess] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [solutionsOpen, setSolutionsOpen] = useState(false);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
 
   const handleGetQuote = () => {
     if (!request.trim()) {
@@ -104,70 +107,156 @@ function LandingPage() {
     { title: "Pan-African Network", location: "14 Countries", img: "/pan-african-network12.png" }
   ];
 
+  const closeMenu = () => {
+    setMobileMenuOpen(false);
+    setSolutionsOpen(false);
+    setResourcesOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans">
-      <nav className="flex justify-between items-center p-6 bg-slate-900/90 backdrop-blur-sm border-b border-slate-800 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="Melome Logo" className="h-12 w-auto object-contain rounded-lg" />
-          <div className="text-2xl font-bold tracking-tighter text-emerald-400">MELOME</div>
-        </div>
-        
-        {/* Desktop Navigation - Organized with Dropdowns */}
-        <div className="hidden md:flex space-x-6 text-xs uppercase tracking-wider">
-          <a href="#services" className="text-slate-400 hover:text-emerald-400 transition">Services</a>
-          <a href="#roadmap" className="text-slate-400 hover:text-emerald-400 transition">Roadmap</a>
-          
-          {/* Solutions Dropdown */}
-          <div className="relative group">
-            <button className="text-slate-400 hover:text-emerald-400 transition flex items-center gap-1">
-              Solutions
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <Link to="/logistics" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Logistics Hub</Link>
-              <Link to="/distribution" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Media Network</Link>
-            </div>
+      {/* Navigation - Mobile Friendly */}
+      <nav className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-800 sticky top-0 z-50">
+        <div className="flex justify-between items-center p-4">
+          <div className="flex items-center gap-2">
+            <img src={logo} alt="Melome Logo" className="h-10 w-auto object-contain rounded-lg" />
+            <div className="text-xl font-bold tracking-tighter text-emerald-400">MELOME</div>
           </div>
           
-          <a href="#team" className="text-slate-400 hover:text-emerald-400 transition">Leadership</a>
-          <a href="#contact" className="text-slate-400 hover:text-emerald-400 transition">Contact</a>
-          
-          {/* Resources Dropdown */}
-          <div className="relative group">
-            <button className="text-slate-400 hover:text-emerald-400 transition flex items-center gap-1">
-              Resources
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <Link to="/tracking" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Track Shipment</Link>
-              <a href="#gallery" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Operations Gallery</a>
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-slate-400 hover:text-emerald-400 transition"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-6 text-xs uppercase tracking-wider">
+            <a href="#services" className="text-slate-400 hover:text-emerald-400 transition">Services</a>
+            <a href="#roadmap" className="text-slate-400 hover:text-emerald-400 transition">Roadmap</a>
+            
+            {/* Solutions Dropdown */}
+            <div className="relative group">
+              <button className="text-slate-400 hover:text-emerald-400 transition flex items-center gap-1">
+                Solutions
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className="absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <Link to="/logistics" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Logistics Hub</Link>
+                <Link to="/distribution" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Media Network</Link>
+              </div>
+            </div>
+            
+            <a href="#team" className="text-slate-400 hover:text-emerald-400 transition">Leadership</a>
+            <a href="#contact" className="text-slate-400 hover:text-emerald-400 transition">Contact</a>
+            
+            {/* Resources Dropdown */}
+            <div className="relative group">
+              <button className="text-slate-400 hover:text-emerald-400 transition flex items-center gap-1">
+                Resources
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className="absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <Link to="/tracking" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Track Shipment</Link>
+                <a href="#gallery" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Operations Gallery</a>
+              </div>
+            </div>
+            
+            <Link to="/china-corridor" className="text-red-400 hover:text-red-300 transition font-bold flex items-center gap-1">
+              <span>🇨🇳</span> 中 EN
+            </Link>
+            
+            <Link to="/pay" className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded font-bold text-xs transition">
+              Pay Now
+            </Link>
+            <Link to="/driver/login" className="text-slate-400 hover:text-emerald-400 transition text-xs">
+              Driver Portal
+            </Link>
+            <Link to="/portal/login" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-1.5 rounded-sm font-bold transition text-xs uppercase">
+              Customer Portal →
+            </Link>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-slate-900 border-t border-slate-800 py-4 px-4 space-y-3">
+            <a href="#services" className="block text-slate-300 hover:text-emerald-400 transition py-2" onClick={closeMenu}>Services</a>
+            <a href="#roadmap" className="block text-slate-300 hover:text-emerald-400 transition py-2" onClick={closeMenu}>Roadmap</a>
+            
+            {/* Solutions Dropdown on Mobile */}
+            <div>
+              <button 
+                onClick={() => setSolutionsOpen(!solutionsOpen)}
+                className="flex items-center justify-between w-full text-slate-300 hover:text-emerald-400 transition py-2"
+              >
+                <span>Solutions</span>
+                <svg className={`w-4 h-4 transition-transform ${solutionsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {solutionsOpen && (
+                <div className="pl-4 space-y-2">
+                  <Link to="/logistics" className="block text-slate-400 hover:text-emerald-400 transition py-2" onClick={closeMenu}>Logistics Hub</Link>
+                  <Link to="/distribution" className="block text-slate-400 hover:text-emerald-400 transition py-2" onClick={closeMenu}>Media Network</Link>
+                </div>
+              )}
+            </div>
+            
+            <a href="#team" className="block text-slate-300 hover:text-emerald-400 transition py-2" onClick={closeMenu}>Leadership</a>
+            <a href="#contact" className="block text-slate-300 hover:text-emerald-400 transition py-2" onClick={closeMenu}>Contact</a>
+            
+            {/* Resources Dropdown on Mobile */}
+            <div>
+              <button 
+                onClick={() => setResourcesOpen(!resourcesOpen)}
+                className="flex items-center justify-between w-full text-slate-300 hover:text-emerald-400 transition py-2"
+              >
+                <span>Resources</span>
+                <svg className={`w-4 h-4 transition-transform ${resourcesOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {resourcesOpen && (
+                <div className="pl-4 space-y-2">
+                  <Link to="/tracking" className="block text-slate-400 hover:text-emerald-400 transition py-2" onClick={closeMenu}>Track Shipment</Link>
+                  <a href="#gallery" className="block text-slate-400 hover:text-emerald-400 transition py-2" onClick={closeMenu}>Operations Gallery</a>
+                </div>
+              )}
+            </div>
+            
+            <Link to="/china-corridor" className="block text-red-400 hover:text-red-300 transition py-2 font-bold" onClick={closeMenu}>🇨🇳 中 EN</Link>
+            
+            <div className="pt-4 border-t border-slate-800 space-y-3">
+              <Link to="/pay" className="block bg-orange-500 hover:bg-orange-600 text-white text-center px-4 py-2 rounded font-bold transition" onClick={closeMenu}>
+                Pay Now
+              </Link>
+              <Link to="/driver/login" className="block text-slate-300 hover:text-emerald-400 transition py-2 text-center" onClick={closeMenu}>
+                Driver Portal
+              </Link>
+              <Link to="/portal/login" className="block bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-center px-4 py-2 rounded-sm font-bold transition text-sm uppercase" onClick={closeMenu}>
+                Customer Portal →
+              </Link>
             </div>
           </div>
-          
-          <Link to="/china-corridor" className="text-red-400 hover:text-red-300 transition font-bold flex items-center gap-1">
-            <span>🇨🇳</span> 中 EN
-          </Link>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Link to="/pay" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-bold text-sm transition">
-            Pay Now
-          </Link>
-          <Link to="/driver/login" className="text-slate-400 hover:text-emerald-400 text-sm transition">
-            Driver Portal
-          </Link>
-          <Link to="/portal/login" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-5 py-2 rounded-sm font-bold transition text-sm uppercase">
-            Customer Portal →
-          </Link>
-        </div>
+        )}
       </nav>
 
+      {/* Rest of your LandingPage content remains exactly the same */}
       {/* Hero Section */}
       <section className="relative py-24 px-6 text-center lg:text-left lg:flex lg:items-center max-w-7xl mx-auto">
+        {/* ... keep all your existing LandingPage JSX exactly as you had it ... */}
         <div className="lg:w-1/2">
           <div className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full mb-6">
             <span className="text-emerald-400">🏆</span>
