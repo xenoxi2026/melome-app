@@ -45,6 +45,10 @@ const PAYFAST_CONFIG = {
   live_url: 'https://www.payfast.co.za/eng/process'  // LIVE URL - real money!
 };
 
+// Get APP_URL from environment or use default
+const APP_URL = process.env.APP_URL || 'http://localhost:5000';
+console.log(`📱 APP_URL: ${APP_URL}`);
+
 // Helper: Generate PayFast Signature
 const generatePayFastSignature = (data) => {
   const queryString = Object.keys(data)
@@ -60,7 +64,7 @@ const generatePayFastSignature = (data) => {
 };
 
 // ============================================
-// NEW ENDPOINT: Generate signature for payment
+// ENDPOINT: Generate signature for payment
 // ============================================
 app.post('/api/payments/generate-signature', (req, res) => {
   try {
@@ -107,9 +111,9 @@ app.post('/api/payments/payfast-url', async (req, res) => {
     const paymentData = {
       merchant_id: PAYFAST_CONFIG.merchant_id,
       merchant_key: PAYFAST_CONFIG.merchant_key,
-      return_url: `${process.env.APP_URL || 'http://localhost:5000'}/payment/success`,
-      cancel_url: `${process.env.APP_URL || 'http://localhost:5000'}/payment/cancel`,
-      notify_url: `${process.env.APP_URL || 'http://localhost:5000'}/api/payments/itn`,
+      return_url: `${APP_URL}/payment/success`,
+      cancel_url: `${APP_URL}/payment/cancel`,
+      notify_url: `${APP_URL}/api/payments/itn`,
       m_payment_id: merchantOrderId,
       amount: parseFloat(amount).toFixed(2),
       item_name: item_name.substring(0, 100),
@@ -131,6 +135,7 @@ app.post('/api/payments/payfast-url', async (req, res) => {
     
     console.log(`[PayFast] Payment initiated for order ${merchantOrderId}`);
     console.log(`[PayFast] Mode: ${PAYFAST_CONFIG.sandbox ? 'SANDBOX (TEST)' : 'LIVE (REAL MONEY)'}`);
+    console.log(`[PayFast] Return URL: ${APP_URL}/payment/success`);
     
     res.json({
       success: true,
@@ -190,6 +195,7 @@ app.listen(PORT, () => {
   console.log(`\n🚀 Melome server running on http://localhost:${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`💳 PayFast Mode: ${PAYFAST_CONFIG.sandbox ? 'SANDBOX (TEST MODE - No real money)' : 'LIVE (REAL MONEY - Customers will be charged)'}`);
+  console.log(`🔗 APP_URL: ${APP_URL}`);
   console.log(`\n📱 Test URLs:`);
   console.log(`   Home: http://localhost:${PORT}/`);
   console.log(`   Pay: http://localhost:${PORT}/pay`);
