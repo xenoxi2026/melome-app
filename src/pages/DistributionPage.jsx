@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Film, Tv, Globe, Upload, Users, CheckCircle, ArrowRight } from 'lucide-react';
+import { Film, Tv, Globe, Upload, Users, CheckCircle, ArrowRight, Truck } from 'lucide-react';
 
 const DistributionPage = () => {
   const [formData, setFormData] = useState({
@@ -47,6 +47,17 @@ const DistributionPage = () => {
         </div>
       </section>
 
+      {/* Internal Navigation Links */}
+      <div className="bg-slate-900/50 border-y border-slate-800 py-4">
+        <div className="max-w-7xl mx-auto px-6 flex flex-wrap justify-center gap-6 text-sm">
+          <Link to="/" className="text-slate-400 hover:text-emerald-400 transition">Home</Link>
+          <Link to="/logistics" className="text-slate-400 hover:text-emerald-400 transition">Logistics Hub</Link>
+          <Link to="/china-corridor" className="text-slate-400 hover:text-red-400 transition">China Corridor</Link>
+          <Link to="/tracking" className="text-slate-400 hover:text-emerald-400 transition">Track Shipment</Link>
+          <Link to="/portal/login" className="text-slate-400 hover:text-emerald-400 transition">Customer Portal</Link>
+        </div>
+      </div>
+
       {/* Strategic Focus Areas */}
       <section className="py-20 px-6 bg-slate-900/30">
         <div className="max-w-6xl mx-auto">
@@ -54,7 +65,7 @@ const DistributionPage = () => {
           <div className="w-24 h-1 bg-emerald-500 mx-auto mb-12"></div>
           
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-8">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 hover:border-emerald-500/50 transition-all">
               <div className="flex items-center gap-3 mb-6">
                 <Tv size={32} className="text-emerald-400" />
                 <h3 className="text-2xl font-bold text-white">Traditional Broadcast</h3>
@@ -64,9 +75,12 @@ const DistributionPage = () => {
                   <span key={i} className="px-3 py-1 bg-slate-800 rounded-full text-sm text-slate-300">{channel}</span>
                 ))}
               </div>
+              <Link to="/contact" className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mt-6 text-sm font-medium">
+                Become a Partner →
+              </Link>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-8">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 hover:border-emerald-500/50 transition-all">
               <div className="flex items-center gap-3 mb-6">
                 <Globe size={32} className="text-emerald-400" />
                 <h3 className="text-2xl font-bold text-white">Digital & VOD</h3>
@@ -76,6 +90,9 @@ const DistributionPage = () => {
                   <span key={i} className="px-3 py-1 bg-slate-800 rounded-full text-sm text-slate-300">{platform}</span>
                 ))}
               </div>
+              <Link to="/contact" className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mt-6 text-sm font-medium">
+                Distribution Inquiry →
+              </Link>
             </div>
           </div>
         </div>
@@ -173,9 +190,14 @@ const DistributionPage = () => {
                   </div>
                 </div>
               </div>
+              <div className="mt-6 pt-6 border-t border-slate-800">
+                <Link to="/logistics" className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-sm font-medium">
+                  <Truck size={14} /> Also need logistics? Visit our Logistics Hub →
+                </Link>
+              </div>
               <a 
                 href="mailto:media@melome.co.za?subject=Partnership%20Inquiry"
-                className="mt-6 inline-block text-emerald-400 hover:text-emerald-300 font-medium"
+                className="mt-4 inline-block w-full text-center bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition"
               >
                 Inquire About Partnership →
               </a>
@@ -197,7 +219,7 @@ const DistributionPage = () => {
               { name: "Encounters", full: "Encounters Documentary Festival" },
               { name: "FESPACO", full: "Pan-African Film Festival" }
             ].map((festival, i) => (
-              <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+              <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-emerald-500/50 transition-all">
                 <h3 className="text-2xl font-bold text-emerald-400 mb-2">{festival.name}</h3>
                 <p className="text-white">{festival.full}</p>
               </div>
@@ -213,12 +235,20 @@ const DistributionPage = () => {
           <p className="text-slate-400 text-lg mb-8">
             Join the creators who trust Melome to bring their stories to African and global audiences.
           </p>
-          <Link 
-            to="/portal/login" 
-            className="inline-block bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-8 py-4 rounded-lg transition"
-          >
-            Submit Your Project →
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link 
+              to="/portal/login" 
+              className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-8 py-4 rounded-lg transition inline-flex items-center justify-center gap-2"
+            >
+              Submit Your Project <ArrowRight size={18} />
+            </Link>
+            <Link 
+              to="/china-corridor" 
+              className="border border-slate-700 hover:border-red-500 text-white font-bold px-8 py-4 rounded-lg transition inline-flex items-center gap-2"
+            >
+              <Globe size={18} /> China-Africa Corridor
+            </Link>
+          </div>
         </div>
       </section>
     </div>

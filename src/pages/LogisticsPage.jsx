@@ -5,7 +5,7 @@ import {
   Scale, Shield, TrendingUp, ChevronRight, Package,
   Warehouse, Plane, BarChart3, CheckCircle, ArrowRight,
   Calendar, Users, Phone, Mail, Send, Navigation,
-  Thermometer, AlertCircle
+  Thermometer, AlertCircle, Globe
 } from 'lucide-react';
 
 const LogisticsPage = () => {
@@ -79,9 +79,9 @@ const LogisticsPage = () => {
                 >
                   Get Logistics Quote <ArrowRight size={18} />
                 </button>
-                <button className="border border-slate-700 hover:border-emerald-500 text-white font-bold px-8 py-4 rounded-lg transition">
-                  View Network
-                </button>
+                <Link to="/distribution" className="border border-slate-700 hover:border-emerald-500 text-white font-bold px-8 py-4 rounded-lg transition inline-flex items-center gap-2">
+                  Media Network <Globe size={18} />
+                </Link>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -105,6 +105,17 @@ const LogisticsPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Internal Navigation Links */}
+      <div className="bg-slate-900/50 border-y border-slate-800 py-4">
+        <div className="max-w-7xl mx-auto px-6 flex flex-wrap justify-center gap-6 text-sm">
+          <Link to="/" className="text-slate-400 hover:text-emerald-400 transition">Home</Link>
+          <Link to="/distribution" className="text-slate-400 hover:text-emerald-400 transition">Media Network</Link>
+          <Link to="/china-corridor" className="text-slate-400 hover:text-red-400 transition">China Corridor</Link>
+          <Link to="/tracking" className="text-slate-400 hover:text-emerald-400 transition">Track Shipment</Link>
+          <Link to="/portal/login" className="text-slate-400 hover:text-emerald-400 transition">Customer Portal</Link>
+        </div>
+      </div>
 
       {/* The Logistics Grid - Asset-Light Model */}
       <section className="py-20 px-6 bg-slate-900/30">
@@ -188,6 +199,9 @@ const LogisticsPage = () => {
                   </div>
                 ))}
               </div>
+              <Link to="/china-corridor" className="inline-flex items-center gap-2 text-red-400 hover:text-red-300 mt-6 text-sm font-medium">
+                China-Africa Trade Corridor →
+              </Link>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-8">
               <div className="flex items-center gap-3 mb-6">

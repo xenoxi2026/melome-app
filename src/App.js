@@ -253,10 +253,8 @@ function LandingPage() {
         )}
       </nav>
 
-      {/* Rest of your LandingPage content remains exactly the same */}
       {/* Hero Section */}
       <section className="relative py-24 px-6 text-center lg:text-left lg:flex lg:items-center max-w-7xl mx-auto">
-        {/* ... keep all your existing LandingPage JSX exactly as you had it ... */}
         <div className="lg:w-1/2">
           <div className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full mb-6">
             <span className="text-emerald-400">🏆</span>
@@ -342,7 +340,7 @@ function LandingPage() {
         <div className="text-center"><div className="text-3xl font-black text-emerald-400">2</div><div className="text-xs uppercase tracking-wider text-slate-500">Operational Hubs</div></div>
       </div>
 
-      {/* Services Section with Learn More button */}
+      {/* Services Section */}
       <section id="services" className="py-24 bg-slate-900/30">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
