@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Globe, TrendingUp, Users, Handshake, ArrowRight, MapPin, Package, Film, CheckCircle } from 'lucide-react';
+import { Globe, TrendingUp, Users, ArrowRight, MapPin, Package, CheckCircle } from 'lucide-react';
 
 const ChinaCorridor = () => {
   return (
@@ -31,17 +31,14 @@ const ChinaCorridor = () => {
           <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-800">
             <div className="text-4xl font-black text-red-400">$28B</div>
             <div className="text-slate-400 mt-2">China-SADC Trade Volume</div>
-            <div className="text-xs text-slate-500 mt-1">2025 Annual Report</div>
           </div>
           <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-800">
             <div className="text-4xl font-black text-emerald-400">450+</div>
             <div className="text-slate-400 mt-2">Verified Logistics Partners</div>
-            <div className="text-xs text-slate-500 mt-1">Across the Belt & Road</div>
           </div>
           <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-800">
             <div className="text-4xl font-black text-red-400">14</div>
             <div className="text-slate-400 mt-2">SADC Countries</div>
-            <div className="text-xs text-slate-500 mt-1">Connected to Chinese Markets</div>
           </div>
         </div>
       </section>
@@ -54,7 +51,7 @@ const ChinaCorridor = () => {
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 hover:border-red-500/50 transition-all group">
-              <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-red-500/30 transition">
+              <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mb-6">
                 <Package size={28} className="text-red-400" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Sourcing & Procurement</h3>
@@ -67,7 +64,7 @@ const ChinaCorridor = () => {
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 hover:border-red-500/50 transition-all group">
-              <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-red-500/30 transition">
+              <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mb-6">
                 <MapPin size={28} className="text-red-400" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Cross-Border Logistics</h3>
@@ -80,8 +77,8 @@ const ChinaCorridor = () => {
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 hover:border-red-500/50 transition-all group">
-              <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-red-500/30 transition">
-                <Handshake size={28} className="text-red-400" />
+              <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mb-6">
+                <Users size={28} className="text-red-400" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Investment Facilitation</h3>
               <p className="text-slate-400">
@@ -104,15 +101,15 @@ const ChinaCorridor = () => {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <CheckCircle size={20} className="text-emerald-500 mt-0.5" />
-                <div><span className="text-white font-bold">Bilingual Team</span><p className="text-slate-400">Mandarin & English fluent staff for seamless communication</p></div>
+                <div><span className="text-white font-bold">Bilingual Team</span><p className="text-slate-400">Mandarin & English fluent staff</p></div>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle size={20} className="text-emerald-500 mt-0.5" />
-                <div><span className="text-white font-bold">On-the-Ground Presence</span><p className="text-slate-400">Representatives in Shanghai and Johannesburg</p></div>
+                <div><span className="text-white font-bold">On-the-Ground Presence</span><p className="text-slate-400">Shanghai and Johannesburg offices</p></div>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle size={20} className="text-emerald-500 mt-0.5" />
-                <div><span className="text-white font-bold">Regulatory Expertise</span><p className="text-slate-400">Customs clearance and trade compliance specialists</p></div>
+                <div><span className="text-white font-bold">Regulatory Expertise</span><p className="text-slate-400">Customs clearance specialists</p></div>
               </li>
             </ul>
             <Link to="/contact" className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold px-6 py-3 rounded-lg transition mt-6">
@@ -124,7 +121,7 @@ const ChinaCorridor = () => {
             <div className="space-y-3">
               <div className="flex justify-between py-2 border-b border-slate-800">
                 <span className="text-slate-400">Shanghai to Durban:</span>
-                <span className="text-white font-bold">22 days (sea freight)</span>
+                <span className="text-white font-bold">22 days</span>
               </div>
               <div className="flex justify-between py-2 border-b border-slate-800">
                 <span className="text-slate-400">Air freight transit:</span>
@@ -136,7 +133,7 @@ const ChinaCorridor = () => {
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-slate-400">WeChat Support:</span>
-                <span className="text-white font-bold">24/7 response</span>
+                <span className="text-white font-bold">24/7</span>
               </div>
             </div>
           </div>
@@ -158,7 +155,6 @@ const ChinaCorridor = () => {
               General Inquiry
             </Link>
           </div>
-          <p className="text-slate-500 text-sm mt-6">或扫描微信二维码联系我们 | Or scan WeChat QR to connect</p>
         </div>
       </section>
     </div>
