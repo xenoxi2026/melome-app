@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import logo from './melome-logo.jpg';
 
-// Import Portal Components
+// Import Pages
 import PaymentPage from './pages/PaymentPage';
+import DistributionPage from './pages/DistributionPage';
+import LogisticsPage from './pages/LogisticsPage';
+
+// Import Portal Components
 import { Login } from './components/Portal/Login';
 import { Dashboard } from './components/Portal/Dashboard';
 import { PrivateRoute } from './components/Portal/PrivateRoute';
@@ -19,7 +23,6 @@ import Contact from './components/Contact';
 import Tracking from './components/Tracking';
 import DriverLogin from './components/Driver/DriverLogin';
 import DriverDashboard from './components/Driver/DriverDashboard';
-import PaymentTest from './components/PaymentTest';
 
 function LandingPage() {
   const [request, setRequest] = useState("");
@@ -62,9 +65,21 @@ function LandingPage() {
   const services = [
     { icon: "🚚", title: "Urgent Parts Delivery", desc: "Rapid response to critical equipment needs — minimizing costly machinery downtime for mining and construction clients. A R500 part should never cost R500,000." },
     { icon: "🔒", title: "Secure Asset Transport", desc: "Professional handling of sensitive technical items and critical documentation, with real-time tracking and chain-of-custody accountability at every stage." },
-    { icon: "⚡", title: "Fleet Agility", desc: "Specialized on/off-road vehicles navigating any terrain without delays. Our fleet adapts to remote mining sites, construction zones, and urban corridors." },
+    { 
+      icon: "⚡", 
+      title: "Fleet Agility", 
+      desc: "Specialized on/off-road vehicles navigating any terrain without delays. Our fleet adapts to remote mining sites, construction zones, and urban corridors.",
+      link: "/logistics",
+      cta: "View Network →"
+    },
     { icon: "🎬", title: "Industrial Storytelling", desc: "Producing and distributing high-impact B2B visual assets for industrial clients. We connect your brand narrative to the audiences that matter most." },
-    { icon: "🌍", title: "Market Entry Distribution", desc: "Managing cross-border media asset movement with supply chain transparency. We open doors for content creators across 14 African countries." },
+    { 
+      icon: "🌍", 
+      title: "Market Entry Distribution", 
+      desc: "Managing cross-border media asset movement with supply chain transparency. We open doors for content creators across 14 African countries.",
+      link: "/distribution",
+      cta: "View Network →"
+    },
     { icon: "🤝", title: "Pan-African Reach", desc: "The #OneAfrica movement — media hubs connecting art centers across 14 countries. Representing South African stories on the global stage." }
   ];
 
@@ -96,17 +111,48 @@ function LandingPage() {
           <img src={logo} alt="Melome Logo" className="h-12 w-auto object-contain rounded-lg" />
           <div className="text-2xl font-bold tracking-tighter text-emerald-400">MELOME</div>
         </div>
-        <div className="hidden md:flex space-x-8 text-sm uppercase tracking-widest">
+        
+        {/* Desktop Navigation - Organized with Dropdowns */}
+        <div className="hidden md:flex space-x-6 text-xs uppercase tracking-wider">
           <a href="#services" className="text-slate-400 hover:text-emerald-400 transition">Services</a>
           <a href="#roadmap" className="text-slate-400 hover:text-emerald-400 transition">Roadmap</a>
-          <a href="#gallery" className="text-slate-400 hover:text-emerald-400 transition">Gallery</a>
+          
+          {/* Solutions Dropdown */}
+          <div className="relative group">
+            <button className="text-slate-400 hover:text-emerald-400 transition flex items-center gap-1">
+              Solutions
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div className="absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <Link to="/logistics" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Logistics Hub</Link>
+              <Link to="/distribution" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Media Network</Link>
+            </div>
+          </div>
+          
           <a href="#team" className="text-slate-400 hover:text-emerald-400 transition">Leadership</a>
           <a href="#contact" className="text-slate-400 hover:text-emerald-400 transition">Contact</a>
-          <Link to="/tracking" className="text-slate-400 hover:text-emerald-400 transition">Track</Link>
+          
+          {/* Resources Dropdown */}
+          <div className="relative group">
+            <button className="text-slate-400 hover:text-emerald-400 transition flex items-center gap-1">
+              Resources
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div className="absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <Link to="/tracking" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Track Shipment</Link>
+              <a href="#gallery" className="block px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-emerald-400">Operations Gallery</a>
+            </div>
+          </div>
+          
           <Link to="/china-corridor" className="text-red-400 hover:text-red-300 transition font-bold flex items-center gap-1">
             <span>🇨🇳</span> 中 EN
           </Link>
         </div>
+        
         <div className="flex items-center gap-3">
           <Link to="/pay" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-bold text-sm transition">
             Pay Now
@@ -120,9 +166,8 @@ function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section and all other LandingPage content remains the same */}
+      {/* Hero Section */}
       <section className="relative py-24 px-6 text-center lg:text-left lg:flex lg:items-center max-w-7xl mx-auto">
-        {/* ... keep all your existing LandingPage JSX exactly as you had it ... */}
         <div className="lg:w-1/2">
           <div className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full mb-6">
             <span className="text-emerald-400">🏆</span>
@@ -208,7 +253,7 @@ function LandingPage() {
         <div className="text-center"><div className="text-3xl font-black text-emerald-400">2</div><div className="text-xs uppercase tracking-wider text-slate-500">Operational Hubs</div></div>
       </div>
 
-      {/* Services Section */}
+      {/* Services Section with Learn More button */}
       <section id="services" className="py-24 bg-slate-900/30">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
@@ -220,7 +265,16 @@ function LandingPage() {
               <div key={i} className="group bg-slate-900 p-8 rounded-lg border border-slate-800 hover:border-emerald-500/50 transition-all hover:transform hover:-translate-y-1">
                 <div className="text-5xl mb-4">{s.icon}</div>
                 <h3 className="text-xl font-bold mb-3 group-hover:text-emerald-400 transition">{s.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{s.desc}</p>
+                <p className="text-slate-400 text-sm leading-relaxed mb-4">{s.desc}</p>
+                {s.link && (
+                  <Link 
+                    to={s.link} 
+                    className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-sm font-medium transition group/btn"
+                  >
+                    {s.cta || "Learn More →"}
+                    <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
+                  </Link>
+                )}
               </div>
             ))}
           </div>
@@ -348,13 +402,15 @@ function LandingPage() {
   );
 }
 
-// Main App with Routes - FIXED: No duplicate or nested Routes
+// Main App with Routes
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/distribution" element={<DistributionPage />} />
+          <Route path="/logistics" element={<LogisticsPage />} />
           <Route path="/china-corridor" element={<ChinaCorridor />} />
           <Route path="/portal/login" element={<Login />} />
           <Route path="/portal/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
