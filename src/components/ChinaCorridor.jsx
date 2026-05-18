@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Globe, TrendingUp, Users, Handshake, ArrowRight, MapPin, Package, Film } from 'lucide-react';
+import { Globe, TrendingUp, Users, Handshake, ArrowRight, MapPin, Package, Film, CheckCircle } from 'lucide-react';
 
 const ChinaCorridor = () => {
   return (
@@ -161,8 +161,6 @@ const ChinaCorridor = () => {
           <p className="text-slate-500 text-sm mt-6">或扫描微信二维码联系我们 | Or scan WeChat QR to connect</p>
         </div>
       </section>
-
-      <WeChatButton />
     </div>
   );
 };
