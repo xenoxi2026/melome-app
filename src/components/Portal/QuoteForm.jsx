@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { FaMapMarkerAlt, FaBox, FaClipboardList, FaCalculator } from 'react-icons/fa';
-import PaymentModal from '../Payment/PaymentModal';
 import { notifyQuoteReceived } from '../services/notificationService';
+import Payment from '../Payment/Payment';
 
 export const QuoteForm = () => {
   const { user } = useAuth();
@@ -79,6 +79,17 @@ export const QuoteForm = () => {
     setCurrentQuote(quote);
     setShowPayment(true);
     setLoading(false);
+  };
+
+  const handlePaymentSuccess = () => {
+    toast.success('Payment successful! Order created.');
+    setShowPayment(false);
+    navigate('/portal/orders');
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
+    toast.error('Payment cancelled. You can try again later.');
   };
 
   return (
@@ -262,19 +273,27 @@ export const QuoteForm = () => {
         </div>
       </div>
 
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPayment}
-        onClose={() => {
-          setShowPayment(false);
-          navigate('/portal/dashboard');
-        }}
-        quote={currentQuote}
-        onSuccess={() => {
-          toast.success('Payment successful! Order created.');
-          navigate('/portal/orders');
-        }}
-      />
+      {/* LIVE Payment Modal */}
+      {showPayment && currentQuote && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={handlePaymentCancel}>
+          <div className="max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <Payment 
+              amount={currentQuote.estimatedPrice}
+              itemName="Melome Logistics Service"
+              itemDescription={`Pickup: ${currentQuote.pickup.city} → Delivery: ${currentQuote.delivery.city} | Weight: ${currentQuote.package.weight}kg`}
+              customerEmail={currentQuote.clientEmail}
+              customerName={currentQuote.clientName}
+              customerPhone={currentQuote.clientPhone}
+            />
+            <button 
+              onClick={handlePaymentCancel}
+              className="mt-4 w-full bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-lg transition font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
