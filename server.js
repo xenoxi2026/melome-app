@@ -7,69 +7,63 @@ const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5802;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Get APP_URL from environment
-const APP_URL = process.env.APP_URL || 'http://localhost:5000';
+// App URL
+const APP_URL = process.env.APP_URL || 'http://localhost:5802';
 console.log(`📱 APP_URL: ${APP_URL}`);
 
 // ============================================
-// 1. API ROUTES FIRST (BEFORE static files!)
+// PAYFAST CONFIGURATION
 // ============================================
-
-// PayFast Configuration
 const PAYFAST_CONFIG = {
-  merchant_id: process.env.PAYFAST_MERCHANT_ID,
-  merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-  passphrase: process.env.PAYFAST_PASSPHRASE,
-  sandbox: process.env.NODE_ENV !== 'production',
-  sandbox_url: 'https://sandbox.payfast.co.za/eng/process',
+  merchant_id: process.env.PAYFAST_MERCHANT_ID || '34934721',
+  merchant_key: process.env.PAYFAST_MERCHANT_KEY || 'nbmhut4xj9wi9',
+  passphrase: process.env.PAYFAST_PASSPHRASE || 'MelomeMoney2020',
+  sandbox: false,
   live_url: 'https://www.payfast.co.za/eng/process'
 };
 
+console.log(`💳 PayFast Merchant ID: ${PAYFAST_CONFIG.merchant_id}`);
+console.log(`💳 PayFast Mode: ${PAYFAST_CONFIG.sandbox ? 'SANDBOX' : 'LIVE'}`);
+
 // Helper: Generate PayFast Signature
 const generatePayFastSignature = (data) => {
-  const { signature, ...cleanData } = data;
-  
-  const queryString = Object.keys(cleanData)
+  const queryString = Object.keys(data)
     .sort()
     .map(key => {
-      const value = cleanData[key];
+      const value = data[key];
       if (value === '' || value === null || value === undefined) return null;
       return `${key}=${encodeURIComponent(value.toString().trim()).replace(/%20/g, '+')}`;
     })
     .filter(item => item !== null)
     .join('&');
   
-  const signatureString = PAYFAST_CONFIG.passphrase 
-    ? `${queryString}&passphrase=${PAYFAST_CONFIG.passphrase}`
-    : queryString;
-  
+  const signatureString = `${queryString}&passphrase=${PAYFAST_CONFIG.passphrase}`;
   return crypto.createHash('md5').update(signatureString).digest('hex');
 };
 
-// Health check - MUST be before static files
+// ============================================
+// API ROUTES
+// ============================================
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running', timestamp: new Date().toISOString() });
 });
 
-// POST /api/payments/payfast-url
-app.post('/api/payments/payfast-url', async (req, res) => {
-  console.log('[PayFast] Request received:', req.body);
+app.post('/api/payments/payfast-url', (req, res) => {
+  console.log('[API] PayFast request:', req.body);
   
   try {
-    const { amount, item_name, item_description, email, name, phone } = req.body;
+    const { amount, item_name, email, name } = req.body;
     
     if (!amount || !item_name || !email) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Missing required fields' 
-      });
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
     const merchantOrderId = `MEL${Date.now()}${Math.floor(Math.random() * 10000)}`;
@@ -85,69 +79,70 @@ app.post('/api/payments/payfast-url', async (req, res) => {
       m_payment_id: merchantOrderId,
       amount: parseFloat(amount).toFixed(2),
       item_name: item_name.substring(0, 100),
-      item_description: (item_description || item_name).substring(0, 255),
       email_address: email,
       name_first: firstName,
       name_last: lastName,
     };
     
-    if (phone && phone.trim()) {
-      paymentData.cell_number = phone.replace(/\D/g, '').substring(0, 13);
-    }
-    
     paymentData.signature = generatePayFastSignature(paymentData);
     
-    const payfastUrl = PAYFAST_CONFIG.sandbox 
-      ? PAYFAST_CONFIG.sandbox_url 
-      : PAYFAST_CONFIG.live_url;
+    const redirectUrl = `${PAYFAST_CONFIG.live_url}?${new URLSearchParams(paymentData).toString()}`;
     
-    const redirectUrl = `${payfastUrl}?${new URLSearchParams(paymentData).toString()}`;
-    
-    console.log(`[PayFast] Payment initiated: ${merchantOrderId}`);
+    console.log(`[API] Payment initiated: ${merchantOrderId}, Amount: R${amount}`);
     
     res.json({ success: true, redirect_url: redirectUrl, order_id: merchantOrderId });
     
   } catch (error) {
-    console.error('[PayFast] Error:', error);
+    console.error('[API] Error:', error);
     res.status(500).json({ success: false, error: 'Payment initiation failed' });
   }
 });
 
-// POST /api/payments/itn
-app.post('/api/payments/itn', async (req, res) => {
-  console.log('[PayFast ITN] Received:', req.body);
+app.post('/api/payments/itn', (req, res) => {
+  console.log('[API] ITN received');
   res.status(200).send('OK');
 });
 
-// GET /api/payments/order/:orderId
-app.get('/api/payments/order/:orderId', (req, res) => {
-  res.json({ success: true, order: { id: req.params.orderId, status: 'completed' } });
-});
-
 // ============================================
-// 2. STATIC FILES (React build)
+// STATIC FILES
 // ============================================
 const buildPath = path.join(__dirname, 'build');
 const indexPath = path.join(buildPath, 'index.html');
 
-app.use(express.static(buildPath));
+console.log(`📁 Build path: ${buildPath}`);
+console.log(`📁 Index exists: ${fs.existsSync(indexPath)}`);
+
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+}
 
 // ============================================
-// 3. CATCH-ALL - Must be LAST!
+// CATCH-ALL
 // ============================================
 app.get('*', (req, res) => {
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(404).send('Build not found');
+    res.status(200).send(`
+      <html>
+        <head><title>Melome API</title></head>
+        <body>
+          <h1>Melome API Server</h1>
+          <p>Server is running. Build folder not found.</p>
+          <p>Run <code>npm run build</code> to build the React app.</p>
+          <p>API is available at <a href="/api/health">/api/health</a></p>
+        </body>
+      </html>
+    `);
   }
 });
 
 // ============================================
-// 4. START SERVER
+// START SERVER
 // ============================================
-app.listen(PORT, () => {
-  console.log(`\n🚀 Melome server running on port ${PORT}`);
-  console.log(`💳 PayFast Mode: ${PAYFAST_CONFIG.sandbox ? 'SANDBOX' : 'LIVE'}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🚀 Server running on port ${PORT}`);
   console.log(`🔗 APP_URL: ${APP_URL}`);
+  console.log(`💳 PayFast: ${PAYFAST_CONFIG.sandbox ? 'SANDBOX' : 'LIVE'}`);
+  console.log(`\n📱 Test API: ${APP_URL}/api/health`);
 });
